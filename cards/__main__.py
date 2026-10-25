@@ -12,6 +12,7 @@
 import argparse
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -57,8 +58,12 @@ def rendered(post):
 
 
 def media_urls(post):
+    # jsDelivr, pinned to the current commit: raw.githubusercontent.com serves MP4 as
+    # application/octet-stream, which Instagram may reject; jsDelivr sends video/mp4.
     repo = os.environ.get("GITHUB_REPOSITORY") or os.environ["CARDS_REPO"]
-    base = f"https://raw.githubusercontent.com/{repo}/main/media/{post['id']}"
+    sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True,
+                         text=True, check=True).stdout.strip()
+    base = f"https://cdn.jsdelivr.net/gh/{repo}@{sha}/media/{post['id']}"
     return [f"{base}/{i:02d}.{ext(post)}" for i in range(1, len(post["slides"]) + 1)]
 
 

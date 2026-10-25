@@ -6,6 +6,7 @@
   python -m cards whoami
   python -m cards refresh-token           refresh if older than 7 days (writes $IG_TOKEN_OUT)
   python -m cards list
+  python -m cards check [post.json ...]   validate copy lengths and structure
 """
 
 import argparse
@@ -122,6 +123,81 @@ def cmd_refresh_token(args):
     print("token refreshed")
 
 
+# Per-line character budgets from guide.md section 3 (== markers not counted).
+LIMITS = {
+    "cover": {"title": (7, 3), "sub": (16, 2), "kicker": (10, 1)},
+    "point": {"title": (8, 2), "body": (20, 2)},
+    "list": {"title": (14, 1)},
+    "cta": {"title": (10, 2), "body": (30, 3)},
+}
+
+
+def check_post(path, post):
+    """Return a list of problems that would make the slides hard to read or break publishing."""
+    errs = []
+    for key in ("id", "scheduled", "status", "slides", "caption"):
+        if key not in post:
+            errs.append(f"missing {key}")
+    if errs:
+        return errs
+    if post["id"] != path.stem:
+        errs.append(f"id {post['id']!r} != file name {path.stem!r}")
+    try:
+        if datetime.fromisoformat(post["scheduled"]).tzinfo is None:
+            errs.append("scheduled needs a timezone (+09:00)")
+    except ValueError:
+        errs.append("scheduled is not ISO 8601")
+    slides = post["slides"]
+    if not 6 <= len(slides) <= 8:
+        errs.append(f"{len(slides)} slides (guide: 6-8)")
+    if slides and slides[0].get("type") != "cover":
+        errs.append("slide 1 must be a cover")
+    if slides and slides[-1].get("type") != "cta":
+        errs.append("last slide must be a cta")
+    for i, s in enumerate(slides, 1):
+        for field, (width, lines) in LIMITS.get(s.get("type", "point"), {}).items():
+            text = (s.get(field) or "").replace("==", "")
+            rows = text.split("\n") if text else []
+            if len(rows) > lines and field not in ("body", "sub"):
+                errs.append(f"slide {i} {field}: {len(rows)} lines (max {lines})")
+            if field in ("body", "sub"):
+                # Body text wraps by itself, so only its total length matters.
+                if len(text.replace(" ", "").replace("\n", "")) > width * lines:
+                    errs.append(f"slide {i} {field}: over {width * lines} chars")
+                continue
+            for row in rows:
+                if len(row.replace(" ", "")) > width:
+                    errs.append(f"slide {i} {field}: {row!r} is over {width} chars per line")
+        if s.get("type") == "list":
+            if not 3 <= len(s.get("items", [])) <= 5:
+                errs.append(f"slide {i}: list needs 3-5 items")
+            for it in s.get("items", []):
+                if len(it.replace(" ", "")) > 14:
+                    errs.append(f"slide {i} item {it!r} is over 14 chars")
+        if i < len(slides) and not s.get("next"):
+            errs.append(f"slide {i}: missing next teaser")
+        if s.get("image") and not s["image"].startswith("http") and not (ROOT / s["image"]).exists():
+            errs.append(f"slide {i}: image {s['image']} not found")
+    if len(post["caption"]) > 2200:
+        errs.append("caption over 2200 chars")
+    if "http" in post["caption"]:
+        errs.append("caption has a URL (not clickable on Instagram)")
+    return errs
+
+
+def cmd_check(args):
+    files = [Path(f) for f in args.files] or [p for p, _ in posts()]
+    bad = 0
+    for path in files:
+        post = json.loads(path.read_text(encoding="utf-8"))
+        errs = check_post(path, post)
+        print(f"{'OK  ' if not errs else 'FAIL'} {path.name}")
+        for e in errs:
+            print(f"     - {e}")
+        bad += bool(errs)
+    sys.exit(1 if bad else 0)
+
+
 def cmd_list(args):
     for _, p in posts():
         print(f"{p['scheduled'][:16]}  {p.get('status', '?'):9}  {p['id']}  {p.get('permalink') or ''}")
@@ -134,6 +210,7 @@ def main():
     s = sub.add_parser("render-due"); s.add_argument("--all", action="store_true")
     s = sub.add_parser("render"); s.add_argument("file")
     s = sub.add_parser("publish-due"); s.add_argument("--dry-run", action="store_true")
+    s = sub.add_parser("check"); s.add_argument("files", nargs="*")
     sub.add_parser("whoami"); sub.add_parser("refresh-token"); sub.add_parser("list")
     args = ap.parse_args()
     globals()["cmd_" + args.cmd.replace("-", "_")](args)

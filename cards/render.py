@@ -1,12 +1,15 @@
 """Render a card-news post (data/posts/<id>.json) into 1080x1350 JPEG slides.
 
-Slide copy may use ==text== for the yellow highlighter and a newline for a line break.
+Slide copy may use ==text== for the accent colour and a newline for a line break.
+Type sizes are set for a phone feed (a 1080px card shows at about 36% size), so the
+smallest text on a card is 34px and headlines start at 100px.
 """
 
 import base64
 import functools
 import html
 import json
+import mimetypes
 import re
 from pathlib import Path
 
@@ -15,16 +18,17 @@ FONTS = Path(__file__).resolve().parent / "fonts"
 MEDIA = ROOT / "media"
 HANDLE = "@citygym_geumho"
 W, H = 1080, 1350
+ACCENT = "#2F6BFF"  # CITYGYM logo blue
 
 THEMES = {
-    # bg, ink, sub, line, mark (highlighter)
-    "dark": ("#161616", "#F4F2EC", "#A9A69E", "#2E2D2A", "#F5E43A"),
-    "light": ("#ECEAE4", "#141414", "#5E5B55", "#D3D0C8", "#F5E43A"),
+    # bg, ink, sub, line
+    "dark": ("#0E1116", "#FFFFFF", "#A4ACBA", "#262B35"),
+    "light": ("#F2F3F5", "#0E1116", "#59606E", "#D9DCE2"),
 }
 
 
 def fmt(text):
-    """Escape, then turn ==x== into highlighter spans and newlines into <br>."""
+    """Escape, then turn ==x== into accent spans and newlines into <br>."""
     out = html.escape(text or "")
     out = re.sub(r"==(.+?)==", r'<span class="mk">\1</span>', out)
     return out.replace("\n", "<br>")
@@ -43,46 +47,67 @@ def _font_faces():
     return "\n".join(faces)
 
 
+def _image_src(ref):
+    """`image` may be an https URL or a path relative to the repo root (e.g. assets/x.jpg)."""
+    if not ref or ref.startswith(("http://", "https://", "data:")):
+        return ref
+    path = ROOT / ref
+    mime = mimetypes.guess_type(path.name)[0] or "image/jpeg"
+    return f"data:{mime};base64,{base64.b64encode(path.read_bytes()).decode()}"
+
+
+def _img(s, cls):
+    src = _image_src(s.get("image"))
+    if not src:
+        return ""
+    pos = html.escape(s.get("image_pos", "center"))
+    return f'<div class="{cls}" style="background-image:url(\'{src}\');background-position:{pos}"></div>'
+
+
 def _slide_body(s):
     kind = s.get("type", "point")
+    kicker = f'<div class="kicker">{fmt(s["kicker"])}</div>' if s.get("kicker") else ""
     if kind == "cover":
+        photo = _img(s, "photo")
         return f"""
-        <div class="cover">
-          <div class="kicker">{fmt(s.get('kicker'))}</div>
-          <h1>{fmt(s['title'])}</h1>
+        {photo}
+        <div class="cover{' with-photo' if photo else ''}">
+          {kicker}
+          <h1 data-max="{300 if photo else 520}">{fmt(s['title'])}</h1>
           <p class="sub">{fmt(s.get('sub'))}</p>
-        </div>
-"""
+        </div>"""
     if kind == "list":
         items = "".join(
-            f'<li><span class="n">{i:02d}</span><span>{fmt(t)}</span></li>'
+            f'<li><span class="n">{i}</span><span>{fmt(t)}</span></li>'
             for i, t in enumerate(s["items"], 1)
         )
         return f"""
         <div class="mid">
-          <div class="kicker">{fmt(s.get('kicker') or '한 장 요약')}</div>
-          <h2>{fmt(s['title'])}</h2>
+          {kicker or '<div class="kicker">캡처해두세요</div>'}
+          <h2 data-max="240">{fmt(s['title'])}</h2>
           <ol>{items}</ol>
         </div>"""
     if kind == "cta":
         return f"""
         <div class="mid cta">
-          <h2>{fmt(s['title'])}</h2>
+          {kicker}
+          <h2 data-max="380">{fmt(s['title'])}</h2>
           <p class="body">{fmt(s.get('body'))}</p>
           <div class="place">시티짐 금호점 · 금호역 1번 출구 앞</div>
         </div>"""
     # point
-    no = s.get("no", "")
+    no = f'<div class="no">{html.escape(s["no"])}</div>' if s.get("no") else ""
+    photo = _img(s, "inset")
     return f"""
         <div class="mid">
-          <div class="no">{html.escape(no)}</div>
-          <h2>{fmt(s['title'])}</h2>
+          {photo}{no or kicker}
+          <h2 data-max="{250 if photo else 360}">{fmt(s['title'])}</h2>
           <p class="body">{fmt(s.get('body'))}</p>
         </div>"""
 
 
 def _teaser(s, idx, total):
-    """Bottom-right hook that pulls the reader to the next slide."""
+    """Bottom hook that pulls the reader to the next slide."""
     if idx == total:
         return ""
     text = s.get("next") or ("넘겨서 확인 →" if idx == 1 else "")
@@ -93,46 +118,61 @@ CSS = """
 *{margin:0;padding:0;box-sizing:border-box}
 body{width:%(W)dpx;height:%(H)dpx;background:var(--bg);color:var(--ink);font-family:P,sans-serif;
   word-break:keep-all;overflow:hidden}
-.card{position:relative;width:%(W)dpx;height:%(H)dpx;padding:120px 112px;display:flex;flex-direction:column}
-.card::before{content:"";position:absolute;inset:0;opacity:.06;pointer-events:none;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='100%%' height='100%%' filter='url(%%23n)'/></svg>")}
-.top{position:absolute;top:56px;left:112px;right:112px;display:flex;justify-content:space-between;
-  font-size:26px;font-weight:600;letter-spacing:.08em;color:var(--sub)}
-.top b{color:var(--ink);font-weight:900}
-.foot{position:absolute;bottom:52px;left:112px;right:112px;display:flex;justify-content:space-between;
-  font-size:26px;font-weight:600;color:var(--sub);border-top:2px solid var(--line);padding-top:22px}
-.mk{background:linear-gradient(transparent 58%%,var(--mark) 58%%,var(--mark) 92%%,transparent 92%%);
-  color:inherit;padding:0 .08em}
-.dark .mk{background:none;color:var(--mark);padding:0}
-.kicker{display:inline-block;font-size:32px;font-weight:800;color:var(--bg);background:var(--ink);
-  padding:10px 22px;margin-bottom:40px;align-self:flex-start}
-.cover{margin-top:auto;margin-bottom:auto;display:flex;flex-direction:column}
-h1{font-size:118px;line-height:1.14;font-weight:900;letter-spacing:-.035em}
-.sub{margin-top:44px;font-size:40px;line-height:1.45;font-weight:600;color:var(--sub)}
-.next{position:absolute;right:112px;bottom:128px;max-width:760px;text-align:right;font-size:34px;line-height:1.35;font-weight:800;color:var(--ink)}
+.card{position:relative;width:%(W)dpx;height:%(H)dpx;padding:110px 96px 190px;display:flex;flex-direction:column}
+.page{position:absolute;top:44px;right:56px;z-index:3;font-size:30px;font-weight:800;color:#fff;
+  background:rgba(14,17,22,.55);padding:8px 20px;border-radius:40px;letter-spacing:.02em}
+.light .page{background:rgba(14,17,22,.08);color:var(--sub)}
+.foot{position:absolute;bottom:56px;left:96px;right:96px;display:flex;justify-content:space-between;
+  align-items:center;font-size:30px;font-weight:600;color:var(--sub)}
+.foot b{font-weight:900;color:var(--ink);letter-spacing:.06em}
+.mk{color:%(A)s}
+.kicker{align-self:flex-start;font-size:36px;font-weight:800;color:#fff;background:%(A)s;
+  padding:12px 26px;border-radius:12px;margin-bottom:36px}
+.photo{position:absolute;top:0;left:0;right:0;height:600px;background-size:cover}
+.photo::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 62%%,var(--bg))}
+.cover{position:relative;z-index:2;margin:auto 0;display:flex;flex-direction:column}
+.cover.with-photo{margin:0;padding-top:440px}
+h1{font-size:150px;line-height:1.1;font-weight:900;letter-spacing:-.04em}
+.with-photo h1{font-size:128px}
+.sub{margin-top:36px;font-size:46px;line-height:1.4;font-weight:600;color:var(--sub)}
+.sub:empty,.body:empty{display:none}
+.next{position:absolute;left:96px;right:96px;bottom:128px;font-size:40px;line-height:1.3;
+  font-weight:800;color:%(A)s;text-align:right}
 .mid{margin:auto 0;display:flex;flex-direction:column}
-.no{font-size:150px;font-weight:900;line-height:1;color:var(--mark);margin-bottom:36px;letter-spacing:-.04em}
-.light .no{color:var(--ink)}
-h2{font-size:82px;line-height:1.2;font-weight:900;letter-spacing:-.03em}
-.body{margin-top:48px;font-size:42px;line-height:1.6;font-weight:400;color:var(--ink);opacity:.86}
-ol{list-style:none;margin-top:48px;border-top:3px solid var(--ink)}
-li{display:flex;gap:28px;font-size:40px;line-height:1.4;font-weight:600;padding:26px 0;border-bottom:2px solid var(--line)}
-li .n{font-weight:900;color:var(--sub);min-width:56px}
-.cta h2{font-size:92px}
-.place{margin-top:64px;font-size:34px;font-weight:800;border:3px solid var(--ink);padding:20px 28px;align-self:flex-start}
-""" % {"W": W, "H": H}
+.inset{height:400px;border-radius:28px;background-size:cover;margin-bottom:48px}
+.no{font-size:120px;font-weight:900;line-height:1;color:%(A)s;margin-bottom:28px;letter-spacing:-.04em}
+h2{font-size:104px;line-height:1.16;font-weight:900;letter-spacing:-.035em}
+.body{margin-top:44px;font-size:50px;line-height:1.5;font-weight:600;color:var(--sub)}
+ol{list-style:none;margin-top:44px}
+li{display:flex;align-items:center;gap:30px;font-size:54px;line-height:1.3;font-weight:800;padding:26px 0;
+  border-bottom:3px solid var(--line)}
+li .n{flex:none;width:72px;height:72px;border-radius:50%%;background:%(A)s;color:#fff;
+  font-size:38px;display:flex;align-items:center;justify-content:center}
+.cta h2{font-size:108px}
+.place{margin-top:56px;font-size:40px;font-weight:800;border:4px solid var(--ink);padding:22px 30px;
+  border-radius:16px;align-self:flex-start}
+""" % {"W": W, "H": H, "A": ACCENT}
+
+# Shrink any headline that is taller than its data-max budget, so a long title from the
+# drafting step never runs into the teaser or footer.
+FIT_JS = """
+for (const h of document.querySelectorAll('[data-max]')) {
+  let size = parseFloat(getComputedStyle(h).fontSize);
+  while (h.offsetHeight > +h.dataset.max && size > 60) { size -= 4; h.style.fontSize = size + 'px'; }
+}
+"""
 
 
 def slide_html(s, idx, total, theme):
-    bg, ink, sub, line, mark = THEMES[theme]
+    bg, ink, sub, line = THEMES[theme]
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
 {_font_faces()}
-:root{{--bg:{bg};--ink:{ink};--sub:{sub};--line:{line};--mark:{mark}}}
+:root{{--bg:{bg};--ink:{ink};--sub:{sub};--line:{line}}}
 {CSS}</style></head><body class="{theme}"><div class="card">
-<div class="top"><span><b>CITYGYM</b> 금호점</span><span>{idx}/{total}</span></div>
+<div class="page">{idx} / {total}</div>
 {_slide_body(s)}
 {_teaser(s, idx, total)}
-<div class="foot"><span>{HANDLE}</span><span>금호역 헬스장</span></div>
+<div class="foot"><span>{HANDLE}</span><b>CITYGYM</b></div>
 </div></body></html>"""
 
 
@@ -149,10 +189,9 @@ def render_post(post, out_dir=None):
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": W, "height": H})
         for i, s in enumerate(slides, 1):
-            # Alternate themes on inner slides so the swipe feels like a turn of page.
-            t = s.get("theme") or theme
-            page.set_content(slide_html(s, i, len(slides), t), wait_until="load")
-            page.evaluate("document.fonts.ready.then(() => document.fonts.check('900 40px P'))")
+            page.set_content(slide_html(s, i, len(slides), s.get("theme") or theme), wait_until="load")
+            page.evaluate("document.fonts.ready")
+            page.evaluate(FIT_JS)
             path = out_dir / f"{i:02d}.jpg"
             page.screenshot(path=str(path), type="jpeg", quality=92)
             paths.append(path)

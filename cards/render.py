@@ -1,6 +1,7 @@
 """Render a card-news post (data/posts/<id>.json) into 1080x1350 JPEG slides.
 
-Slide copy may use ==text== for the accent colour and a newline for a line break.
+Slide copy may use ==text== for the accent colour, ??text?? for a redacted word (hidden
+behind a bar, revealed on a later slide) and a newline for a line break.
 Type sizes are set for a phone feed (a 1080px card shows at about 36% size), so the
 smallest text on a card is 34px and headlines start at 100px.
 
@@ -35,8 +36,9 @@ THEMES = {
 
 
 def fmt(text):
-    """Escape, then turn ==x== into accent spans and newlines into <br>."""
+    """Escape, then turn ==x== into accent spans, ??x?? into redaction bars, \n into <br>."""
     out = html.escape(text or "")
+    out = re.sub(r"\?\?(.+?)\?\?", r'<span class="rd">\1</span>', out)
     out = re.sub(r"==(.+?)==", r'<span class="mk">\1</span>', out)
     return out.replace("\n", "<br>")
 
@@ -110,6 +112,17 @@ def _slide_body(s):
           <p class="body">{fmt(s.get('body'))}</p>
           <div class="place">시티짐 금호점 · 금호역 1번 출구 앞</div>
         </div>"""
+    if kind == "quiz":
+        opts = "".join(
+            f'<div class="opt" style="--i:{i}"><span class="n">{chr(65 + i)}</span><span>{fmt(o)}</span></div>'
+            for i, o in enumerate(s["options"])
+        )
+        return f"""
+        <div class="mid quiz">
+          {kicker or '<div class="kicker">맞혀보세요</div>'}
+          <h2 data-max="250">{fmt_lines(s['title'])}</h2>
+          <div class="opts">{opts}</div>
+        </div>"""
     # point
     no = f'<div class="no">{html.escape(s["no"])}</div>' if s.get("no") else ""
     photo = _img(s, "inset")
@@ -166,6 +179,13 @@ li .n{flex:none;width:72px;height:72px;border-radius:50%%;background:%(A)s;color
 .cta h2{font-size:108px}
 .place{margin-top:56px;font-size:40px;font-weight:800;border:4px solid var(--ink);padding:22px 30px;
   border-radius:16px;align-self:flex-start}
+.rd{display:inline-block;white-space:nowrap;color:transparent;background:var(--ink);border-radius:.12em;padding:0 .1em;
+  -webkit-text-fill-color:transparent;position:relative}
+.opts{margin-top:52px;display:flex;flex-direction:column;gap:28px}
+.opt{display:flex;align-items:center;gap:30px;font-size:54px;font-weight:800;line-height:1.25;
+  padding:30px 34px;border:4px solid var(--line);border-radius:24px}
+.opt .n{flex:none;width:76px;height:76px;border-radius:50%%;background:%(A)s;color:#fff;font-size:42px;
+  font-weight:900;display:flex;align-items:center;justify-content:center}
 .ln{display:block}
 .ln>span{display:inline-block}
 """ % {"W": W, "H": H, "A": ACCENT}
@@ -195,6 +215,8 @@ MOTION_CSS = """
 .motion .photo{animation:zoom 5s linear both;transform-origin:center 30%%}
 .motion .inset{animation:fadeUp .8s var(--e) both}
 .motion .next{animation:fadeUp .6s var(--e) 1.6s both,nudge 1.2s ease-in-out 2.2s infinite}
+.motion .rd{animation:bar .45s var(--e) .95s both,blink 1.6s ease-in-out 1.6s infinite;transform-origin:left}
+.motion .opt{animation:pop .6s var(--e) both;animation-delay:calc(.8s + var(--i) * .18s);transform-origin:left center}
 @keyframes fade{from{opacity:0}}
 @keyframes up{from{transform:translateY(110%%)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(40px)}}
@@ -205,6 +227,7 @@ MOTION_CSS = """
 @keyframes nudge{50%%{transform:translateX(-14px)}}
 @keyframes zoom{to{transform:scale(1.08)}}
 @keyframes drift{to{transform:translate(420px,520px) scale(1.2)}}
+@keyframes blink{50%%{opacity:.55}}
 """ % {"A": ACCENT}
 
 SEEK_JS = "t => document.getAnimations().forEach(a => { a.pause(); a.currentTime = t; })"

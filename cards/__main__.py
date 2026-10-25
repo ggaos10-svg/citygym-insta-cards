@@ -137,6 +137,7 @@ LIMITS = {
     "cover": {"title": (7, 3), "sub": (16, 2), "kicker": (10, 1)},
     "point": {"title": (8, 2), "body": (20, 2)},
     "list": {"title": (14, 1)},
+    "quiz": {"title": (8, 2), "kicker": (10, 1)},
     "cta": {"title": (10, 2), "body": (30, 3)},
 }
 
@@ -159,8 +160,10 @@ def check_post(path, post):
     slides = post["slides"]
     if not 6 <= len(slides) <= 8:
         errs.append(f"{len(slides)} slides (guide: 6-8)")
-    if slides and slides[0].get("type") != "cover":
-        errs.append("slide 1 must be a cover")
+    if slides and slides[0].get("type") not in ("cover", "quiz"):
+        errs.append("slide 1 must be a cover or quiz")
+    if len(slides) > 1 and slides[1].get("type") not in ("point", "quiz"):
+        errs.append("slide 2 must be a point or quiz (the second half of the hook)")
     if slides and slides[-1].get("type") != "cta":
         errs.append("last slide must be a cta")
     for i, s in enumerate(slides, 1):
@@ -177,6 +180,12 @@ def check_post(path, post):
             for row in rows:
                 if len(row.replace(" ", "")) > width:
                     errs.append(f"slide {i} {field}: {row!r} is over {width} chars per line")
+        if s.get("type") == "quiz":
+            if not 2 <= len(s.get("options", [])) <= 3:
+                errs.append(f"slide {i}: quiz needs 2-3 options")
+            for o in s.get("options", []):
+                if len(o.replace(" ", "")) > 12:
+                    errs.append(f"slide {i} option {o!r} is over 12 chars")
         if s.get("type") == "list":
             if not 3 <= len(s.get("items", [])) <= 5:
                 errs.append(f"slide {i}: list needs 3-5 items")

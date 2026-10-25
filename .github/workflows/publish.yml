@@ -25,7 +25,7 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -36,6 +36,7 @@ jobs:
 
       - name: Install renderer
         run: |
+          command -v ffmpeg || (sudo apt-get update && sudo apt-get install -y ffmpeg)
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 

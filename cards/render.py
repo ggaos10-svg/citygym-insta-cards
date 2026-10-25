@@ -3,6 +3,10 @@
 Slide copy may use ==text== for the accent colour and a newline for a line break.
 Type sizes are set for a phone feed (a 1080px card shows at about 36% size), so the
 smallest text on a card is 34px and headlines start at 100px.
+
+Posts render as motion by default ("format": "motion"): each slide becomes a 5-second
+1080x1350 MP4 whose elements animate in, plus a JPEG of the last frame for previews.
+"format": "static" renders JPEGs only.
 """
 
 import base64
@@ -11,6 +15,7 @@ import html
 import json
 import mimetypes
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -19,6 +24,8 @@ MEDIA = ROOT / "media"
 HANDLE = "@citygym_geumho"
 W, H = 1080, 1350
 ACCENT = "#2F6BFF"  # CITYGYM logo blue
+FPS = 30
+SECONDS = 5  # per slide; Instagram carousel videos must be 3-60s
 
 THEMES = {
     # bg, ink, sub, line
@@ -47,6 +54,14 @@ def _font_faces():
     return "\n".join(faces)
 
 
+def fmt_lines(text):
+    """Like fmt, but wraps each line so motion can reveal headlines line by line."""
+    lines = fmt(text).split("<br>")
+    return "".join(
+        f'<span class="ln"><span style="--i:{i}">{line}</span></span>' for i, line in enumerate(lines)
+    )
+
+
 def _image_src(ref):
     """`image` may be an https URL or a path relative to the repo root (e.g. assets/x.jpg)."""
     if not ref or ref.startswith(("http://", "https://", "data:")):
@@ -73,25 +88,25 @@ def _slide_body(s):
         {photo}
         <div class="cover{' with-photo' if photo else ''}">
           {kicker}
-          <h1 data-max="{300 if photo else 520}">{fmt(s['title'])}</h1>
+          <h1 data-max="{300 if photo else 520}">{fmt_lines(s['title'])}</h1>
           <p class="sub">{fmt(s.get('sub'))}</p>
         </div>"""
     if kind == "list":
         items = "".join(
-            f'<li><span class="n">{i}</span><span>{fmt(t)}</span></li>'
+            f'<li style="--i:{i}"><span class="n">{i}</span><span>{fmt(t)}</span></li>'
             for i, t in enumerate(s["items"], 1)
         )
         return f"""
         <div class="mid">
           {kicker or '<div class="kicker">캡처해두세요</div>'}
-          <h2 data-max="240">{fmt(s['title'])}</h2>
+          <h2 data-max="240">{fmt_lines(s['title'])}</h2>
           <ol>{items}</ol>
         </div>"""
     if kind == "cta":
         return f"""
         <div class="mid cta">
           {kicker}
-          <h2 data-max="380">{fmt(s['title'])}</h2>
+          <h2 data-max="380">{fmt_lines(s['title'])}</h2>
           <p class="body">{fmt(s.get('body'))}</p>
           <div class="place">시티짐 금호점 · 금호역 1번 출구 앞</div>
         </div>"""
@@ -101,7 +116,7 @@ def _slide_body(s):
     return f"""
         <div class="mid">
           {photo}{no or kicker}
-          <h2 data-max="{250 if photo else 360}">{fmt(s['title'])}</h2>
+          <h2 data-max="{250 if photo else 360}">{fmt_lines(s['title'])}</h2>
           <p class="body">{fmt(s.get('body'))}</p>
         </div>"""
 
@@ -151,7 +166,48 @@ li .n{flex:none;width:72px;height:72px;border-radius:50%%;background:%(A)s;color
 .cta h2{font-size:108px}
 .place{margin-top:56px;font-size:40px;font-weight:800;border:4px solid var(--ink);padding:22px 30px;
   border-radius:16px;align-self:flex-start}
+.ln{display:block}
+.ln>span{display:inline-block}
 """ % {"W": W, "H": H, "A": ACCENT}
+
+# Motion layer: only active with body.motion. Every animation ends in the static layout, so
+# the last frame matches the JPEG design. Timeline: badge 0.1s, headline lines from 0.25s,
+# accent word 0.9s, body 1.0s, list rows from 0.7s, teaser 1.6s then a looping nudge.
+MOTION_CSS = """
+.motion{--e:cubic-bezier(.16,1,.3,1)}
+.motion .glow{position:absolute;width:900px;height:900px;border-radius:50%%;left:-200px;top:-150px;
+  background:radial-gradient(circle,%(A)s55,transparent 65%%);opacity:.35;
+  animation:drift 5s ease-in-out infinite alternate}
+.motion.light .glow{opacity:.18}
+.motion .cover,.motion .mid{position:relative;z-index:1}
+.motion .page,.motion .foot{animation:fade .5s var(--e) both}
+.motion .kicker{animation:slideIn .6s var(--e) .1s both}
+.motion .no{animation:pop .7s var(--e) .1s both;transform-origin:left bottom}
+.motion .ln{overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em}
+.motion .ln>span{animation:up .8s var(--e) both;animation-delay:calc(.25s + var(--i) * .12s)}
+.motion .mk{position:relative;animation:ink .4s ease-out .9s both}
+.motion h1 .mk::after,.motion h2 .mk::after{content:"";position:absolute;left:0;right:0;bottom:.04em;
+  height:.09em;background:%(A)s;border-radius:.05em;transform-origin:left;animation:bar .5s var(--e) 1s both}
+.motion .sub,.motion .body{animation:fadeUp .7s var(--e) 1s both}
+.motion li{animation:slideIn .6s var(--e) both;animation-delay:calc(.55s + var(--i) * .15s)}
+.motion li .n{animation:pop .5s var(--e) both;animation-delay:calc(.65s + var(--i) * .15s)}
+.motion .place{animation:fadeUp .7s var(--e) 1.4s both}
+.motion .photo{animation:zoom 5s linear both;transform-origin:center 30%%}
+.motion .inset{animation:fadeUp .8s var(--e) both}
+.motion .next{animation:fadeUp .6s var(--e) 1.6s both,nudge 1.2s ease-in-out 2.2s infinite}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(110%%)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(40px)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-60px)}}
+@keyframes pop{0%%{opacity:0;transform:scale(.3)}70%%{opacity:1;transform:scale(1.08)}}
+@keyframes bar{from{transform:scaleX(0)}}
+@keyframes ink{from{color:var(--ink)}}
+@keyframes nudge{50%%{transform:translateX(-14px)}}
+@keyframes zoom{to{transform:scale(1.08)}}
+@keyframes drift{to{transform:translate(420px,520px) scale(1.2)}}
+""" % {"A": ACCENT}
+
+SEEK_JS = "t => document.getAnimations().forEach(a => { a.pause(); a.currentTime = t; })"
 
 # Shrink any headline that is taller than its data-max budget, so a long title from the
 # drafting step never runs into the teaser or footer.
@@ -163,12 +219,13 @@ for (const h of document.querySelectorAll('[data-max]')) {
 """
 
 
-def slide_html(s, idx, total, theme):
+def slide_html(s, idx, total, theme, motion=False):
     bg, ink, sub, line = THEMES[theme]
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
 {_font_faces()}
 :root{{--bg:{bg};--ink:{ink};--sub:{sub};--line:{line}}}
-{CSS}</style></head><body class="{theme}"><div class="card">
+{CSS}{MOTION_CSS if motion else ""}</style></head><body class="{theme}{' motion' if motion else ''}"><div class="card">
+{'<div class="glow"></div>' if motion else ''}
 <div class="page">{idx} / {total}</div>
 {_slide_body(s)}
 {_teaser(s, idx, total)}
@@ -176,12 +233,36 @@ def slide_html(s, idx, total, theme):
 </div></body></html>"""
 
 
+def _encode(page, path):
+    """Seek every animation frame by frame and pipe the screenshots into ffmpeg."""
+    ff = subprocess.Popen(
+        ["ffmpeg", "-y", "-loglevel", "error",
+         "-f", "image2pipe", "-framerate", str(FPS), "-c:v", "mjpeg", "-i", "-",
+         "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
+         "-map", "0:v", "-map", "1:a", "-shortest",
+         "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-pix_fmt", "yuv420p",
+         "-profile:v", "high", "-c:a", "aac", "-b:a", "64k", "-movflags", "+faststart", str(path)],
+        stdin=subprocess.PIPE,
+    )
+    for f in range(FPS * SECONDS):
+        page.evaluate(SEEK_JS, f * 1000 / FPS)
+        ff.stdin.write(page.screenshot(type="jpeg", quality=95))
+    ff.stdin.close()
+    if ff.wait():
+        raise RuntimeError(f"ffmpeg failed for {path}")
+
+
+def is_motion(post):
+    return post.get("format", "motion") == "motion"
+
+
 def render_post(post, out_dir=None):
-    """Render all slides of a post dict. Returns the list of JPEG paths."""
+    """Render all slides of a post dict. Returns the media paths (MP4 for motion, else JPEG)."""
     from playwright.sync_api import sync_playwright
 
     slides = post["slides"]
     theme = post.get("theme", "dark")
+    motion = is_motion(post)
     out_dir = Path(out_dir or MEDIA / post["id"])
     out_dir.mkdir(parents=True, exist_ok=True)
     paths = []
@@ -189,12 +270,18 @@ def render_post(post, out_dir=None):
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": W, "height": H})
         for i, s in enumerate(slides, 1):
-            page.set_content(slide_html(s, i, len(slides), s.get("theme") or theme), wait_until="load")
+            page.set_content(slide_html(s, i, len(slides), s.get("theme") or theme, motion), wait_until="load")
             page.evaluate("document.fonts.ready")
             page.evaluate(FIT_JS)
-            path = out_dir / f"{i:02d}.jpg"
-            page.screenshot(path=str(path), type="jpeg", quality=92)
-            paths.append(path)
+            jpg = out_dir / f"{i:02d}.jpg"
+            if motion:
+                mp4 = out_dir / f"{i:02d}.mp4"
+                _encode(page, mp4)
+                page.evaluate(SEEK_JS, SECONDS * 1000)  # last frame = finished layout
+                paths.append(mp4)
+            else:
+                paths.append(jpg)
+            page.screenshot(path=str(jpg), type="jpeg", quality=92)
         browser.close()
     return paths
 

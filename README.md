@@ -6,7 +6,7 @@
 - `cards/config/facts.md` — 확정된 센터 정보 (여기 없는 가격·이벤트는 안 씀)
 - `data/posts/*.json` — 게시물 (status: pending / approved / published / failed)
 - `DRAFTING.md` — 클라우드 루틴(화·목·토 09:00 KST)이 따르는 초안 작성 절차
-- `media/<id>/NN.jpg` — 렌더된 1080x1350 카드 (Instagram이 raw URL로 가져가므로 이 저장소는 공개)
+- `media/<id>/NN.mp4` (모션, 기본) / `NN.jpg` (미리보기·정적) — 렌더된 1080x1350 카드 (Instagram이 raw URL로 가져가므로 이 저장소는 공개)
 
 흐름
 1. Claude 클라우드 루틴이 다음 게시 슬롯의 글을 `data/posts/`에 쓰고 push.

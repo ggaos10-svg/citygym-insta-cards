@@ -16,7 +16,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from .render import MEDIA, ROOT, render_post
+from .render import MEDIA, ROOT, is_motion, render_post
 
 POSTS = ROOT / "data" / "posts"
 STATE = ROOT / "data" / "state.json"
@@ -47,15 +47,19 @@ def save(path, post):
     path.write_text(json.dumps(post, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def ext(post):
+    return "mp4" if is_motion(post) else "jpg"
+
+
 def rendered(post):
     d = MEDIA / post["id"]
-    return d.exists() and len(list(d.glob("*.jpg"))) == len(post["slides"])
+    return d.exists() and len(list(d.glob(f"*.{ext(post)}"))) == len(post["slides"])
 
 
-def image_urls(post):
+def media_urls(post):
     repo = os.environ.get("GITHUB_REPOSITORY") or os.environ["CARDS_REPO"]
     base = f"https://raw.githubusercontent.com/{repo}/main/media/{post['id']}"
-    return [f"{base}/{i:02d}.jpg" for i in range(1, len(post["slides"]) + 1)]
+    return [f"{base}/{i:02d}.{ext(post)}" for i in range(1, len(post["slides"]) + 1)]
 
 
 def cmd_render_due(args):
@@ -84,7 +88,7 @@ def cmd_publish_due(args):
         if not rendered(post):
             print(f"skip {post['id']}: not rendered yet")
             continue
-        urls = image_urls(post)
+        urls = media_urls(post)
         if args.dry_run:
             print(f"would publish {post['id']} ({len(urls)} slides)\n  {urls[0]}")
             continue

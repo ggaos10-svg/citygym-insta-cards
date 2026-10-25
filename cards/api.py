@@ -43,26 +43,32 @@ class Instagram:
     def me(self):
         return self.get("me", fields="user_id,username,account_type")
 
-    def _wait_ready(self, container_id, tries=20):
+    def _wait_ready(self, container_id, tries=60):
         for _ in range(tries):
             status = self.get(container_id, fields="status_code").get("status_code")
             if status == "FINISHED":
                 return
             if status in ("ERROR", "EXPIRED"):
                 raise IGError(f"container {container_id} status {status}")
-            time.sleep(3)
+            time.sleep(5)
         raise IGError(f"container {container_id} not ready")
 
-    def publish_carousel(self, image_urls, caption, alt_text=None):
-        if not 2 <= len(image_urls) <= 20:
-            raise IGError(f"carousel needs 2-20 images, got {len(image_urls)}")
+    def publish_carousel(self, media_urls, caption, alt_text=None):
+        """Publish a carousel of JPEG and/or MP4 URLs (Instagram fetches them itself)."""
+        if not 2 <= len(media_urls) <= 20:
+            raise IGError(f"carousel needs 2-20 items, got {len(media_urls)}")
         if len(caption) > MAX_CAPTION:
             raise IGError(f"caption is {len(caption)} chars (max {MAX_CAPTION})")
         children = []
-        for i, url in enumerate(image_urls):
-            params = {"image_url": url, "is_carousel_item": "true"}
-            if alt_text and i == 0:
-                params["alt_text"] = alt_text
+        for i, url in enumerate(media_urls):
+            if url.endswith(".mp4"):
+                # thumb_offset picks a frame after the intro animation for the grid thumbnail.
+                params = {"media_type": "VIDEO", "video_url": url, "thumb_offset": "4000"}
+            else:
+                params = {"image_url": url}
+                if alt_text and i == 0:
+                    params["alt_text"] = alt_text
+            params["is_carousel_item"] = "true"
             children.append(self.post("me/media", **params)["id"])
         for c in children:
             self._wait_ready(c)

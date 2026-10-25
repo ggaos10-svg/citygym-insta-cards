@@ -1,0 +1,89 @@
+name: publish
+
+# Renders new card posts and publishes approved ones whose time has passed.
+# Runs hourly at :23 (UTC). Also runs on pushes to data/ so new drafts get preview images.
+on:
+  schedule:
+    - cron: "23 * * * *"
+  push:
+    branches: [main]
+    paths: ["data/posts/**", "cards/render.py"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only show what would be published"
+        type: boolean
+        default: false
+
+concurrency:
+  group: cards-bot
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install renderer
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Render new posts
+        run: python -m cards render-due
+
+      # Images must be on GitHub before Instagram can fetch them from raw URLs.
+      - name: Push images
+        run: |
+          git config user.name "cards-bot"
+          git config user.email "cards-bot@users.noreply.github.com"
+          git add media
+          if ! git diff --cached --quiet; then
+            git commit -m "bot: render $(date -u +%Y-%m-%dT%H:%MZ)"
+            git pull --rebase
+            git push
+            sleep 20
+          fi
+
+      - name: Publish
+        if: github.event_name != 'push'
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          IG_TOKEN_OUT: ${{ runner.temp }}/new_token
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python -m cards whoami
+            python -m cards publish-due --dry-run
+          else
+            python -m cards publish-due
+            python -m cards refresh-token
+          fi
+
+      - name: Store refreshed token
+        if: github.event_name != 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -s "$RUNNER_TEMP/new_token" ]; then
+            gh secret set INSTAGRAM_ACCESS_TOKEN --repo "$GITHUB_REPOSITORY" < "$RUNNER_TEMP/new_token"
+            rm -f "$RUNNER_TEMP/new_token"
+            echo "token secret updated"
+          fi
+
+      - name: Commit data
+        run: |
+          git add data
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "bot: publish run $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase
+          git push

@@ -1,0 +1,79 @@
+"""Minimal Instagram Graph API client (Instagram Login flavour, stdlib only)."""
+
+import json
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+BASE = "https://graph.instagram.com/v23.0"
+MAX_CAPTION = 2200
+
+
+class IGError(RuntimeError):
+    pass
+
+
+class Instagram:
+    def __init__(self, token):
+        if not token:
+            raise IGError("INSTAGRAM_ACCESS_TOKEN is empty")
+        self.token = token
+
+    def _call(self, method, url, params):
+        params = dict(params, access_token=self.token)
+        data = urllib.parse.urlencode(params)
+        if method == "GET":
+            req = urllib.request.Request(f"{url}?{data}")
+        else:
+            req = urllib.request.Request(url, data=data.encode(), method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            body = e.read().decode(errors="replace")[:500]
+            raise IGError(f"HTTP {e.code} {url.replace(BASE, '')}: {body}") from None
+
+    def get(self, path, **params):
+        return self._call("GET", f"{BASE}/{path}", params)
+
+    def post(self, path, **params):
+        return self._call("POST", f"{BASE}/{path}", params)
+
+    def me(self):
+        return self.get("me", fields="user_id,username,account_type")
+
+    def _wait_ready(self, container_id, tries=20):
+        for _ in range(tries):
+            status = self.get(container_id, fields="status_code").get("status_code")
+            if status == "FINISHED":
+                return
+            if status in ("ERROR", "EXPIRED"):
+                raise IGError(f"container {container_id} status {status}")
+            time.sleep(3)
+        raise IGError(f"container {container_id} not ready")
+
+    def publish_carousel(self, image_urls, caption, alt_text=None):
+        if not 2 <= len(image_urls) <= 20:
+            raise IGError(f"carousel needs 2-20 images, got {len(image_urls)}")
+        if len(caption) > MAX_CAPTION:
+            raise IGError(f"caption is {len(caption)} chars (max {MAX_CAPTION})")
+        children = []
+        for i, url in enumerate(image_urls):
+            params = {"image_url": url, "is_carousel_item": "true"}
+            if alt_text and i == 0:
+                params["alt_text"] = alt_text
+            children.append(self.post("me/media", **params)["id"])
+        for c in children:
+            self._wait_ready(c)
+        parent = self.post(
+            "me/media", media_type="CAROUSEL", children=",".join(children), caption=caption
+        )["id"]
+        self._wait_ready(parent)
+        media_id = self.post("me/media_publish", creation_id=parent)["id"]
+        permalink = self.get(media_id, fields="permalink").get("permalink")
+        return media_id, permalink
+
+    def refresh_token(self):
+        url = "https://graph.instagram.com/refresh_access_token"
+        return self._call("GET", url, {"grant_type": "ig_refresh_token"})

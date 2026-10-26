@@ -36,8 +36,7 @@ jobs:
       # Most hourly runs have nothing new; only then install Node, Remotion and Korean fonts.
       - name: Find posts to render
         id: todo
-        run: echo "ids=$(python -m cards render-due --pending | tr '
-' ' ')" >> "$GITHUB_OUTPUT"
+        run: echo "ids=$(python -m cards render-due --pending | xargs)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v4
         if: steps.todo.outputs.ids != ''

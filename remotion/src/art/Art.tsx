@@ -494,6 +494,27 @@ export const Rack: React.FC = () => {
   );
 };
 
+// treadmill: dark deck with a moving belt, side rails, console at the far end
+export const Treadmill: React.FC = () => {
+  const t = useCurrentFrame() / 30;
+  const W = 250, D = 110, H = 190, p = fit(W, D, H);
+  const run = (t * 60) % 40;
+  return (
+    <Paper viewBox="0 0 400 420">
+      <Ground p={p} W={W} D={D} />
+      {[12, D - 22].map((y) => <B key={y} p={p} at={[8, y, 0]} size={[12, 10, 150]} c={METAL} />)}
+      <B p={p} at={[-6, 0, 150]} size={[34, D, 34]} c={ORG} />
+      <g transform={onY(p, -6, D, 150)}><rect x={6} y={-28} width={22} height={18} fill="#7FC7D9" stroke={INK} strokeWidth={3} /></g>
+      <B p={p} at={[20, 0, 0]} size={[W - 20, D, 28]} c={DARK} />
+      <g transform={onTop(p, 28)}>
+        <rect x={30} y={14} width={W - 44} height={D - 28} fill="#2A2724" stroke={INK} strokeWidth={4} />
+        {Array.from({ length: 6 }, (_, i) => 34 + i * 40 + run).filter((x) => x < W - 16).map((x) => <path key={x} d={`M${x} 18 V${D - 18}`} stroke="#4A4642" strokeWidth={6} />)}
+      </g>
+      {[6, D - 6].map((y) => <Line key={y} a={p(20, y, 120)} b={p(110, y, 90)} c={METAL[2]} w={9} />)}
+    </Paper>
+  );
+};
+
 // phone lying flat, booking calendar on screen with today's cell pulsing
 export const Phone: React.FC = () => {
   const t = useCurrentFrame() / 30;
@@ -580,6 +601,7 @@ export const CODE_PROPS: Record<string, React.FC> = {
   feet_stance: FeetStance,
   machines: Machines,
   stairs: Stairs,
+  treadmill: Treadmill,
   booty: Booty,
   bench: Bench,
   sauna: Sauna,

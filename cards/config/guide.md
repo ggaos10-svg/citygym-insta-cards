@@ -1,7 +1,7 @@
 # 시티짐 금호점 인스타 카드뉴스 가이드
 
 계정: @citygym_geumho · 주 3회 (화·목·토 19:00 KST 게시)
-이 파일은 **무엇을 쓰는지**(주제, 후킹, 흐름, 말투, 사실)를 정한다. **어떻게 보이는지**(장 종류, 필드, 그림, 모션)는 `design.md`, 후킹 문장과 원칙은 `hooks.md`. 셋 다 읽고 쓴다.
+이 파일은 **무엇을 쓰는지**(주제, 후킹, 흐름, 말투, 사실)를 정한다. **어떻게 보이는지**(장 종류, 필드, 그림, 모션)는 `design.md`(Note, 기본)와 `design-pano.md`(가로 잇기, 순서가 있는 주제), 후킹 문장과 원칙은 `hooks.md`. 전부 읽고 쓴다.
 
 ## 0. 목표
 
@@ -122,7 +122,7 @@
 
 ## 7. 파일
 
-`data/posts/YYYY-MM-DD-<slug>.json`, 형식과 장 종류별 필드는 design.md 5장. `"design": "note"` 필수.
+`data/posts/YYYY-MM-DD-<slug>.json`. `"design"`은 `"note"`(형식은 design.md 5장) 또는 `"pano"`(형식은 design-pano.md 4장).
 - `status`: 일반 글은 `approved` (자동 게시). 통증·질환·다이어트 효과 주장·센터 변경 공지처럼 민감한 글은 `pending` + `note`(사람이 `approved`로 바꿔야 게시).
 - `id`는 파일 이름과 같게.
 - `python -m cards check data/posts/<파일>.json`이 OK여야 렌더링·게시된다. 실패한 글은 Actions가 건너뛴다.

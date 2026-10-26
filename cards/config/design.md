@@ -1,6 +1,7 @@
 # 카드뉴스 디자인 가이드 (Note 스타일)
 
 2026-10-26 디자인 초기화. 기준은 시티짐 블로그 영상의 **"Note" 스타일**이다 (블로그 영상 `projects/citygym-blog-motion/note.tsx`와 같은 부품). 이전 디자인(남색 글자 카드, 곰돌이, AI 생성 그림, studio 스타일)은 쓰지 않는다. **캐릭터와 그림은 전부 코드로 그린다** (`remotion/src/art/Art.tsx`, 이미지 파일 없음).
+두 번째 디자인 **가로 잇기**(순서가 있는 주제용)는 `design-pano.md`. 그림 목록(3장)과 새 그림 그리는 법(3-1장)은 두 디자인이 같이 쓴다.
 문구 규칙(후킹, 장 흐름, 사실)은 `guide.md`와 `hooks.md`를 그대로 따른다. 이 파일은 **어떻게 보이고 움직이는지**만 정한다.
 
 ## 1. 한 장의 구성 (1080x1350, 6초 영상)
@@ -57,7 +58,7 @@
 - 캐릭터는 **찹쌀떡**: 크림색 말랑한 몸, 주황 `CITYGYM` 머리띠, 점 눈, 분홍 볼, 가는 먹색 팔다리, 파란 그림자. 숨 쉬듯 말랑거리고 눈을 깜빡이며 머리띠 끈이 펄럭인다.
 - 찹쌀떡 포즈는 장 종류로 자동: hook 걱정, section 손 흔들기, highlight 가리키기, stat 놀람, compare 엄지척, punch 환호, checklist 가리키기, cta 손 흔들기.
 - `prop` 목록
-  - 기구·장소: `machines` `stairs`(천국의계단) `booty`(부티빌더) `bench` `sauna`(반신욕기) `desk`(상담 데스크) `rack`(덤벨 랙) `board`(클립보드) `building`(센터 건물) `phone` `stopwatch` `subway`
+  - 기구·장소: `machines` `stairs`(천국의계단) `treadmill`(러닝머신) `booty`(부티빌더) `bench` `sauna`(반신욕기) `desk`(상담 데스크) `rack`(덤벨 랙) `board`(클립보드) `building`(센터 건물) `phone` `stopwatch` `subway`
   - 찹쌀떡 운동 시연 (옆모습, 2초마다 앉았다 일어남, 오른쪽 아래 찹쌀떡은 자동으로 숨김): `chair`(의자에 앉기) `squat_bad`(무릎 앞으로·뒤꿈치 들림) `squat_good`(엉덩이 뒤로) `squat_parallel`(허벅지 평행, 점선) `squat_heels`(뒤꿈치로 밀며 일어나기)
   - 도식: `feet_stance`(매트 위 발 위치: 어깨너비, 발끝 15°)
   - 전체 모습은 `cd remotion && npx remotion still src/index.tsx Gallery out.png`로 한 장에 볼 수 있다.

@@ -160,8 +160,8 @@ def check_post(path, post):
             errs.append(f"missing {key}")
     if errs:
         return errs
-    if post.get("design") != "note":
-        errs.append('design must be "note"')
+    if post.get("design") not in ("note", "pano"):
+        errs.append('design must be "note" or "pano"')
     if post["id"] != path.stem:
         errs.append(f"id {post['id']!r} != file name {path.stem!r}")
     try:
@@ -169,7 +169,19 @@ def check_post(path, post):
             errs.append("scheduled needs a timezone (+09:00)")
     except ValueError:
         errs.append("scheduled is not ISO 8601")
-    slides = post["slides"]
+    if post.get("design") == "pano":
+        errs += check_pano(post)
+    else:
+        errs += check_note(post["slides"])
+    if len(post["caption"]) > 2200:
+        errs.append("caption over 2200 chars")
+    if "http" in post["caption"]:
+        errs.append("caption has a URL (not clickable on Instagram)")
+    return errs
+
+
+def check_note(slides):
+    errs = []
     if not 6 <= len(slides) <= 12:
         errs.append(f"{len(slides)} slides (guide: 6-12)")
     if slides and slides[0].get("type") != "hook":
@@ -215,10 +227,61 @@ def check_post(path, post):
                 errs.append(f"slide {i}: {key} {s[key]!r} has no illustration (see design.md prop list)")
         if i < len(slides) and not s.get("next"):
             errs.append(f"slide {i}: missing next teaser")
-    if len(post["caption"]) > 2200:
-        errs.append("caption over 2200 chars")
-    if "http" in post["caption"]:
-        errs.append("caption has a URL (not clickable on Instagram)")
+    return errs
+
+
+# Pano design (cards/config/design-pano.md): cover, stake, 2-5 numbered stations, recap, cta on
+# one wide canvas. Headline lines are sized to fit 880px, so they are counted with spaces.
+POSES = {"wave", "point", "wow", "thumbs", "worried", "cheer"}
+
+
+def check_pano(post):
+    errs, slides = [], post["slides"]
+    kinds = [s.get("kind") for s in slides]
+    if not 6 <= len(slides) <= 9:
+        errs.append(f"{len(slides)} slides (pano: 6-9)")
+    if kinds[:2] != ["cover", "stake"] or kinds[-2:] != ["recap", "cta"]:
+        errs.append("pano order must be cover, stake, station..., recap, cta")
+    stations = [s.get("station") for s in slides if s.get("kind") == "station"]
+    if kinds[2:-2] != ["station"] * len(kinds[2:-2]) or stations != list(range(1, len(stations) + 1)):
+        errs.append("slides between stake and recap must be stations numbered 1, 2, 3...")
+    if not 2 <= len(stations) <= 5:
+        errs.append(f"{len(stations)} stations (pano: 2-5)")
+    if not post.get("label") or len(post["label"]) > 10:
+        errs.append("label (topic shown on every slide) is required, 10 chars max")
+    for i, s in enumerate(slides, 1):
+        k = s.get("kind")
+        lines = s.get("headline")
+        if not isinstance(lines, list) or not 1 <= len(lines) <= 2:
+            errs.append(f"slide {i}: headline must be a list of 1-2 lines")
+            continue
+        for line in lines:
+            n = len(MARK.sub(lambda m: m.group(2), line))
+            if n > 11:
+                errs.append(f"slide {i}: headline line {line!r} is {n} chars (max 11 with spaces)")
+        if not any(MARK.search(line) for line in lines):
+            errs.append(f"slide {i}: headline needs one {{hl|..}} or {{red|..}} key word")
+        if s.get("sub") and len(s["sub"]) > 26:
+            errs.append(f"slide {i}: sub is {len(s['sub'])} chars (max 26 with spaces)")
+        if k in ("cover", "station") and not s.get("prop"):
+            errs.append(f"slide {i} ({k}): missing prop")
+        if k == "recap":
+            items = s.get("items", [])
+            if len(items) != len(stations):
+                errs.append(f"slide {i}: recap needs one item per station ({len(stations)})")
+            for it in items:
+                if len(it.get("title", "")) > 6:
+                    errs.append(f"slide {i}: recap item {it.get('title')!r} is over 6 chars")
+            if s.get("note") and len(s["note"]) > 24:
+                errs.append(f"slide {i}: recap note is over 24 chars")
+        if k == "cta" and not s.get("location"):
+            errs.append(f"slide {i}: cta needs location")
+        if s.get("pose") and s["pose"] not in POSES:
+            errs.append(f"slide {i}: pose {s['pose']!r} unknown ({', '.join(sorted(POSES))})")
+        names = [s.get("prop"), s.get("side")] + [it.get("prop") for it in s.get("items", [])]
+        for name in filter(None, names):
+            if name not in PROPS:
+                errs.append(f"slide {i}: {name!r} has no illustration (see design.md prop list)")
     return errs
 
 

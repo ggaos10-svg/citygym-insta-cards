@@ -20,3 +20,18 @@ errs = "\n".join(check_post(path, bad))
 for needle in ("three compare slides in a row", "'unicorn' has no illustration", "max 24", "key word"):
     assert needle in errs, (needle, errs)
 print("check_post self-check OK")
+
+# Pano design
+path = next(Path(__file__).resolve().parent.parent.glob("data/posts/test-*-pano.json"))
+good = json.loads(path.read_text(encoding="utf-8"))
+assert check_post(path, good) == [], check_post(path, good)
+
+bad = copy.deepcopy(good)
+bad["slides"][3]["station"] = 5  # stations 1, 5, 3
+bad["slides"][2]["prop"] = "unicorn"
+bad["slides"][0]["headline"] = ["강조 단어가 없는 아주 긴 첫 줄"]
+del bad["slides"][-1]["location"]
+errs = "\n".join(check_post(path, bad))
+for needle in ("numbered 1, 2, 3", "'unicorn' has no illustration", "max 11", "key word", "cta needs location"):
+    assert needle in errs, (needle, errs)
+print("check_pano self-check OK")

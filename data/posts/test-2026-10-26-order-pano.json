@@ -1,0 +1,96 @@
+{
+  "id": "test-2026-10-26-order-pano",
+  "design": "pano",
+  "scheduled": "2026-10-26T19:00:00+09:00",
+  "status": "pending",
+  "topic": "tip",
+  "note": "검토용 샘플 (가로 잇기 디자인) - 게시하지 말 것",
+  "label": "운동 순서",
+  "handle": "@citygym_geumho",
+  "slides": [
+    {
+      "kind": "cover",
+      "headline": [
+        "러닝머신부터",
+        "타면 {red|손해}"
+      ],
+      "sub": "순서만 바꿔도 드는 무게가 달라져요",
+      "prop": "treadmill",
+      "pose": "worried"
+    },
+    {
+      "kind": "stake",
+      "headline": [
+        "땀은 나는데",
+        "무게가 {hl|그대로}?"
+      ],
+      "sub": "순서 문제예요",
+      "pose": "wow"
+    },
+    {
+      "kind": "station",
+      "station": 1,
+      "headline": [
+        "워밍업",
+        "가볍게 {hl|5~10분}"
+      ],
+      "sub": "몸만 데우기, 지치면 안 돼요",
+      "prop": "stopwatch"
+    },
+    {
+      "kind": "station",
+      "station": 2,
+      "headline": [
+        "근력운동",
+        "{hl|무거운 것}부터"
+      ],
+      "sub": "힘 남았을 때 · 하체·등 같은 큰 근육 먼저",
+      "prop": "rack",
+      "side": "squat_good"
+    },
+    {
+      "kind": "station",
+      "station": 3,
+      "headline": [
+        "유산소",
+        "{hl|마지막}에 땀 빼기"
+      ],
+      "sub": "천국의계단 8대라 마무리도 대기 없이",
+      "prop": "stairs"
+    },
+    {
+      "kind": "recap",
+      "headline": [
+        "캡처해두세요",
+        "운동 {red|순서}"
+      ],
+      "items": [
+        {
+          "title": "워밍업",
+          "prop": "stopwatch"
+        },
+        {
+          "title": "근력운동",
+          "prop": "rack"
+        },
+        {
+          "title": "유산소",
+          "prop": "stairs"
+        }
+      ],
+      "note": "예외: 달리기 대회 준비면 유산소 먼저"
+    },
+    {
+      "kind": "cta",
+      "headline": [
+        "러닝머신부터 타는",
+        "친구한테 {hl|보내주세요}"
+      ],
+      "sub": "오늘 몇 번부터 했는지 댓글로 1·2·3",
+      "prop": "building",
+      "pose": "wave",
+      "location": "금호역 1번 출구 앞"
+    }
+  ],
+  "caption": "땀은 쏟았는데 무게가 그대로라면, 순서부터 보세요.\n\n유산소로 힘을 먼저 다 쓰면 정작 근력운동 때 무게를 못 들어요.\n워밍업 가볍게, 근력은 힘 남았을 때, 유산소는 마지막에.\n저장해두고 오늘 순서대로 한 번 해보세요.\n\n시티짐 금호점 · 금호역 1번 출구 바로 앞\n상담 예약은 프로필 링크에서\n\n#금호역헬스장 #성동구헬스장 #운동순서 #헬스초보"
+}

@@ -3,7 +3,8 @@
 인스타 카드뉴스 자동 운영 (@citygym_geumho, 시티짐 금호점). 주 3회 화·목·토 19:00.
 
 - `cards/config/guide.md` — 무엇을 쓰는지: 주제·후킹·흐름·말투·캡션
-- `cards/config/design.md` — 어떻게 보이는지: Note 디자인, 장 종류·필드·그림 목록·모션
+- `cards/config/design.md` — 어떻게 보이는지: Note 디자인(기본), 장 종류·필드·그림 목록·모션
+- `cards/config/design-pano.md` — 두 번째 디자인 가로 잇기: 한 장짜리 긴 그림을 잘라 넘길 때 이어지게 (순서가 있는 주제)
 - `cards/config/hooks.md` — 후킹 원칙과 문장 템플릿
 - `cards/config/facts.md` — 확정된 센터 정보 (여기 없는 가격·이벤트는 안 씀)
 - `data/posts/*.json` — 게시물 (status: pending / approved / published / failed)

@@ -1,4 +1,6 @@
 // Render every slide of a post JSON with Remotion: NN.mp4 (8 s) + NN.jpg (still at 4 s, the cover frame).
+// Note posts render one Card per slide; pano posts render CardPano once per slide as a window
+// (panel i) onto one wide canvas, so the slides join up when swiped.
 // usage: node remotion/render.mjs <post.json> <outDir>
 import fs from "node:fs";
 import path from "node:path";
@@ -15,8 +17,12 @@ fs.mkdirSync(outDir, { recursive: true });
 const serveUrl = await bundle({ entryPoint: path.join(here, "src/index.tsx") });
 const total = post.slides.length;
 for (const [i, slide] of post.slides.entries()) {
-  const inputProps = { slide, idx: i + 1, total };
-  const composition = await selectComposition({ serveUrl, id: "Card", inputProps });
+  const pano = post.design === "pano";
+  const id = pano ? "CardPano" : "Card";
+  const inputProps = pano
+    ? { slides: post.slides, panel: i, handle: post.handle ?? "@citygym_geumho", topic: post.label ?? "" }
+    : { slide, idx: i + 1, total };
+  const composition = await selectComposition({ serveUrl, id, inputProps });
   const n = String(i + 1).padStart(2, "0");
   await renderMedia({ composition, serveUrl, codec: "h264", inputProps, outputLocation: path.join(outDir, `${n}.mp4`), crf: 23 });
   await renderStill({ composition, serveUrl, inputProps, frame: 120, imageFormat: "jpeg", output: path.join(outDir, `${n}.jpg`) });

@@ -221,13 +221,15 @@ li .n{flex:none;width:72px;height:72px;border-radius:50%%;background:%(A)s;color
 # Motion layer: only active with body.motion. All copy is fully visible from frame 0 (a
 # swiper never sees an empty slide), and every animation repeats on a period that divides
 # SECONDS, so Instagram's loop restart is seamless. Motion is emphasis only: the accent
-# underline pulses, the redaction bar blinks, the X/O marks pulse in turn, the teaser arrow
+# underline pulses (and on the cover the word punches out), the redaction bar blinks, the X/O marks pulse in turn, the teaser arrow
 # nudges, the background glow drifts and a cover photo breathes.
 MOTION_CSS = """
 .motion{--e:cubic-bezier(.45,0,.55,1)}
 .motion .glow{position:absolute;width:900px;height:900px;border-radius:50%%;left:-200px;top:-150px;
   background:radial-gradient(circle,%(A)s66,transparent 65%%);opacity:.5;animation:drift 8s var(--e) infinite}
 .motion.light .glow{opacity:.22}
+.motion.t-cover .glow{opacity:.85;width:1100px;height:1100px}
+.motion.t-cover .mk{display:inline-block;animation:punch 4s var(--e) infinite;transform-origin:left 70%%}
 .motion .cover,.motion .mid{position:relative;z-index:1}
 .motion .mk{position:relative}
 .motion h1 .mk::after,.motion h2 .mk::after{content:"";position:absolute;left:0;right:0;bottom:.04em;
@@ -243,6 +245,7 @@ MOTION_CSS = """
 @keyframes blink{50%%{opacity:.55}}
 @keyframes pulse{0%%,60%%,100%%{transform:scale(1)}30%%{transform:scale(1.18)}}
 @keyframes nudge{50%%{transform:translateX(-14px)}}
+@keyframes punch{0%%,14%%,100%%{transform:scale(1)}5%%{transform:scale(1.16) rotate(-2deg)}9%%{transform:scale(.97)}}
 @keyframes breathe{50%%{transform:scale(1.05)}}
 """ % {"A": ACCENT}
 
@@ -263,7 +266,7 @@ def slide_html(s, idx, total, theme, motion=False, series=""):
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
 {_font_faces()}
 :root{{--bg:{bg};--ink:{ink};--sub:{sub};--line:{line}}}
-{CSS}{MOTION_CSS if motion else ""}</style></head><body class="{theme}{' motion' if motion else ''}"><div class="card">
+{CSS}{MOTION_CSS if motion else ""}</style></head><body class="{theme}{' motion' if motion else ''} t-{s.get('type', 'point')}"><div class="card">
 {'<div class="glow"></div>' if motion else ''}
 {f'<div class="series">{fmt(series)}</div>' if series else ''}
 <div class="page">{idx} / {total}</div>

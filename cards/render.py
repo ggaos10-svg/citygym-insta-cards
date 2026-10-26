@@ -5,8 +5,9 @@ behind a bar, revealed on a later slide) and a newline for a line break.
 Type sizes are set for a phone feed (a 1080px card shows at about 36% size), so the
 smallest text on a card is 34px and headlines start at 100px.
 
-Posts render as motion by default ("format": "motion"): each slide becomes a 5-second
-1080x1350 MP4 whose elements animate in, plus a JPEG of the last frame for previews.
+Posts render as motion by default ("format": "motion"): each slide becomes an 8-second
+1080x1350 MP4 with the copy visible from the first frame and looping emphasis motion, plus a
+JPEG for previews.
 "format": "static" renders JPEGs only.
 """
 
@@ -26,7 +27,7 @@ HANDLE = "@citygym_geumho"
 W, H = 1080, 1350
 ACCENT = "#2F6BFF"  # CITYGYM logo blue
 FPS = 30
-SECONDS = 5  # per slide; Instagram carousel videos must be 3-60s
+SECONDS = 8  # per slide, long enough to read before the loop; Instagram allows 3-60s
 
 THEMES = {
     # bg, ink, sub, line
@@ -217,47 +218,32 @@ li .n{flex:none;width:72px;height:72px;border-radius:50%%;background:%(A)s;color
 .ln>span{display:inline-block}
 """ % {"W": W, "H": H, "A": ACCENT}
 
-# Motion layer: only active with body.motion. Every animation ends in the static layout, so
-# the last frame matches the JPEG design. Timeline: badge 0.1s, headline lines from 0.25s,
-# accent word 0.9s, body 1.0s, list rows from 0.7s, teaser 1.6s then a looping nudge.
+# Motion layer: only active with body.motion. All copy is fully visible from frame 0 (a
+# swiper never sees an empty slide), and every animation repeats on a period that divides
+# SECONDS, so Instagram's loop restart is seamless. Motion is emphasis only: the accent
+# underline pulses, the redaction bar blinks, the X/O marks pulse in turn, the teaser arrow
+# nudges, the background glow drifts and a cover photo breathes.
 MOTION_CSS = """
-.motion{--e:cubic-bezier(.16,1,.3,1)}
+.motion{--e:cubic-bezier(.45,0,.55,1)}
 .motion .glow{position:absolute;width:900px;height:900px;border-radius:50%%;left:-200px;top:-150px;
-  background:radial-gradient(circle,%(A)s55,transparent 65%%);opacity:.35;
-  animation:drift 5s ease-in-out infinite alternate}
-.motion.light .glow{opacity:.18}
+  background:radial-gradient(circle,%(A)s66,transparent 65%%);opacity:.5;animation:drift 8s var(--e) infinite}
+.motion.light .glow{opacity:.22}
 .motion .cover,.motion .mid{position:relative;z-index:1}
-.motion .page,.motion .foot{animation:fade .5s var(--e) both}
-.motion .kicker{animation:slideIn .6s var(--e) .1s both}
-.motion .no{animation:pop .7s var(--e) .1s both;transform-origin:left bottom}
-.motion .ln{overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em}
-.motion .ln>span{animation:up .8s var(--e) both;animation-delay:calc(.25s + var(--i) * .12s)}
-.motion .mk{position:relative;animation:ink .4s ease-out .9s both}
+.motion .mk{position:relative}
 .motion h1 .mk::after,.motion h2 .mk::after{content:"";position:absolute;left:0;right:0;bottom:.04em;
-  height:.09em;background:%(A)s;border-radius:.05em;transform-origin:left;animation:bar .5s var(--e) 1s both}
-.motion .sub,.motion .body{animation:fadeUp .7s var(--e) 1s both}
-.motion li{animation:slideIn .6s var(--e) both;animation-delay:calc(.55s + var(--i) * .15s)}
-.motion li .n{animation:pop .5s var(--e) both;animation-delay:calc(.65s + var(--i) * .15s)}
-.motion .place{animation:fadeUp .7s var(--e) 1.4s both}
-.motion .photo{animation:zoom 5s linear both;transform-origin:center 30%%}
-.motion .inset{animation:fadeUp .8s var(--e) both}
-.motion .next{animation:fadeUp .6s var(--e) 1.6s both,nudge 1.2s ease-in-out 2.2s infinite}
-.motion .rd{animation:bar .45s var(--e) .95s both,blink 1.6s ease-in-out 1.6s infinite;transform-origin:left}
-.motion .bad{animation:pop .6s var(--e) .8s both}
-.motion .good{animation:pop .6s var(--e) 1.1s both}
-.motion .series{animation:fade .5s var(--e) both}
-.motion .opt{animation:pop .6s var(--e) both;animation-delay:calc(.8s + var(--i) * .18s);transform-origin:left center}
-@keyframes fade{from{opacity:0}}
-@keyframes up{from{transform:translateY(110%%)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(40px)}}
-@keyframes slideIn{from{opacity:0;transform:translateX(-60px)}}
-@keyframes pop{0%%{opacity:0;transform:scale(.3)}70%%{opacity:1;transform:scale(1.08)}}
-@keyframes bar{from{transform:scaleX(0)}}
-@keyframes ink{from{color:var(--ink)}}
-@keyframes nudge{50%%{transform:translateX(-14px)}}
-@keyframes zoom{to{transform:scale(1.08)}}
-@keyframes drift{to{transform:translate(420px,520px) scale(1.2)}}
+  height:.09em;background:%(A)s;border-radius:.05em;transform-origin:left;animation:sweep 4s var(--e) infinite}
+.motion .rd{animation:blink 2s var(--e) infinite}
+.motion .bad .mark{display:inline-block;animation:pulse 2s var(--e) infinite;transform-origin:left center}
+.motion .good .mark{display:inline-block;animation:pulse 2s var(--e) 1s infinite;transform-origin:left center}
+.motion .opt .n{animation:pulse 2s var(--e) infinite;animation-delay:calc(var(--i) * .5s)}
+.motion .next{animation:nudge 1s var(--e) infinite}
+.motion .photo{animation:breathe 8s var(--e) infinite;transform-origin:center 30%%}
+@keyframes drift{50%%{transform:translate(420px,520px) scale(1.2)}}
+@keyframes sweep{0%%,10%%{transform:scaleX(0)}35%%,100%%{transform:scaleX(1)}}
 @keyframes blink{50%%{opacity:.55}}
+@keyframes pulse{0%%,60%%,100%%{transform:scale(1)}30%%{transform:scale(1.18)}}
+@keyframes nudge{50%%{transform:translateX(-14px)}}
+@keyframes breathe{50%%{transform:scale(1.05)}}
 """ % {"A": ACCENT}
 
 SEEK_JS = "t => document.getAnimations().forEach(a => { a.pause(); a.currentTime = t; })"
@@ -331,7 +317,7 @@ def render_post(post, out_dir=None):
             if motion:
                 mp4 = out_dir / f"{i:02d}.mp4"
                 _encode(page, mp4)
-                page.evaluate(SEEK_JS, SECONDS * 1000)  # last frame = finished layout
+                page.evaluate(SEEK_JS, 2000)  # preview: underline drawn, marks at rest
                 paths.append(mp4)
             else:
                 paths.append(jpg)

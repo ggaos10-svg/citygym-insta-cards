@@ -1,13 +1,13 @@
 name: publish
 
-# Renders new card posts and publishes approved ones whose time has passed.
-# Runs hourly at :23 (UTC). Also runs on pushes to data/ so new drafts get preview images.
+# Renders new card posts with Remotion (remotion/, Note design) and publishes approved ones
+# whose time has passed. Runs hourly at :23 (UTC), and on pushes to drafts or the renderer.
 on:
   schedule:
     - cron: "23 * * * *"
   push:
     branches: [main]
-    paths: ["data/posts/**", "cards/render.py"]
+    paths: ["data/posts/**", "remotion/**", "cards/**"]
   workflow_dispatch:
     inputs:
       dry_run:
@@ -32,19 +32,30 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
+
+      # Most hourly runs have nothing new; only then install Node, Remotion and Korean fonts.
+      - name: Find posts to render
+        id: todo
+        run: echo "ids=$(python -m cards render-due --pending | tr '
+' ' ')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        if: steps.todo.outputs.ids != ''
+        with:
+          node-version: "20"
 
       - name: Install renderer
+        if: steps.todo.outputs.ids != ''
         run: |
-          command -v ffmpeg || (sudo apt-get update && sudo apt-get install -y ffmpeg)
-          pip install -r requirements.txt
-          python -m playwright install --with-deps chromium
+          sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+          npm install --prefix remotion --no-audit --no-fund
 
       - name: Render new posts
+        if: steps.todo.outputs.ids != ''
         run: python -m cards render-due
 
-      # Images must be on GitHub before Instagram can fetch them from raw URLs.
-      - name: Push images
+      # Videos must be on GitHub before Instagram can fetch them (via jsDelivr).
+      - name: Push videos
         run: |
           git config user.name "cards-bot"
           git config user.email "cards-bot@users.noreply.github.com"

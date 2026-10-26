@@ -1,6 +1,6 @@
 """Card-news bot CLI.
 
-  python -m cards render-due [--all]      render posts that have no images yet
+  python -m cards render-due [--all] [--pending]  render (or list) posts without videos yet (Remotion)
   python -m cards render <post.json>      (re)render one post
   python -m cards publish-due [--dry-run] publish approved posts whose time has passed
   python -m cards whoami
@@ -12,12 +12,13 @@
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from .render import MEDIA, ROOT, is_motion, render_post
+from .render import MEDIA, PROPS, ROOT, render_post
 
 POSTS = ROOT / "data" / "posts"
 STATE = ROOT / "data" / "state.json"
@@ -48,13 +49,9 @@ def save(path, post):
     path.write_text(json.dumps(post, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def ext(post):
-    return "mp4" if is_motion(post) else "jpg"
-
-
 def rendered(post):
     d = MEDIA / post["id"]
-    return d.exists() and len(list(d.glob(f"*.{ext(post)}"))) == len(post["slides"])
+    return d.exists() and len(list(d.glob("*.mp4"))) == len(post["slides"])
 
 
 def media_urls(post):
@@ -64,21 +61,29 @@ def media_urls(post):
     sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True,
                          text=True, check=True).stdout.strip()
     base = f"https://cdn.jsdelivr.net/gh/{repo}@{sha}/media/{post['id']}"
-    return [f"{base}/{i:02d}.{ext(post)}" for i in range(1, len(post["slides"]) + 1)]
+    return [f"{base}/{i:02d}.mp4" for i in range(1, len(post["slides"]) + 1)]
 
 
 def cmd_render_due(args):
     for path, post in posts():
         if post.get("status") == "published" and not args.all:
             continue
-        if args.all or not rendered(post):
-            for p in render_post(post):
-                print(p.relative_to(ROOT))
+        if not (args.all or not rendered(post)):
+            continue
+        errs = check_post(path, post)
+        if errs:  # a broken draft must not stop the others; it stays unrendered and unpublished
+            print(f"skip {path.name}: " + "; ".join(errs), file=sys.stderr)
+            continue
+        if args.pending:
+            print(post["id"])
+            continue
+        for p in render_post(post, path):
+            print(p.relative_to(ROOT))
 
 
 def cmd_render(args):
     post = json.loads(Path(args.file).read_text(encoding="utf-8"))
-    for p in render_post(post):
+    for p in render_post(post, args.file):
         print(p)
 
 
@@ -132,15 +137,19 @@ def cmd_refresh_token(args):
     print("token refreshed")
 
 
-# Per-line character budgets from guide.md section 3 (== markers not counted).
-LIMITS = {
-    "cover": {"title": (7, 3), "sub": (16, 2), "kicker": (10, 1)},
-    "point": {"title": (8, 2), "body": (20, 2)},
-    "list": {"title": (14, 1)},
-    "quiz": {"title": (8, 2), "kicker": (10, 1)},
-    "compare": {"title": (8, 2), "wrong": (8, 2), "right": (8, 2), "body": (20, 2)},
-    "cta": {"title": (10, 2), "body": (30, 3)},
+# Note design (cards/config/design.md): fields each slide type needs, and copy budgets
+# (characters without spaces) that keep text readable on a phone.
+FIELDS = {
+    "hook": ("lines", "reveal", "prop"), "highlight": ("lines", "prop"), "section": ("num", "title", "prop"),
+    "compare": ("left", "right", "rows", "left_prop", "prop"), "stat": ("value", "caption", "prop"),
+    "punch": ("word",), "checklist": ("title", "items"), "cta": ("line", "location"),
 }
+MARK = re.compile(r"\{(hl|red)\|([^}]*)\}")
+
+
+def visible(text):
+    """Text as shown: {hl|x}/{red|x} markup removed, spaces not counted."""
+    return MARK.sub(lambda m: m.group(2), text or "").replace(" ", "")
 
 
 def check_post(path, post):
@@ -151,6 +160,8 @@ def check_post(path, post):
             errs.append(f"missing {key}")
     if errs:
         return errs
+    if post.get("design") != "note":
+        errs.append('design must be "note"')
     if post["id"] != path.stem:
         errs.append(f"id {post['id']!r} != file name {path.stem!r}")
     try:
@@ -161,49 +172,49 @@ def check_post(path, post):
     slides = post["slides"]
     if not 6 <= len(slides) <= 12:
         errs.append(f"{len(slides)} slides (guide: 6-12)")
-    if slides and slides[0].get("type") not in ("cover", "quiz"):
-        errs.append("slide 1 must be a cover or quiz")
-    if len(slides) > 1 and slides[1].get("type") not in ("point", "quiz", "compare"):
-        errs.append("slide 2 must be a point, quiz or compare (the second half of the hook)")
+    if slides and slides[0].get("type") != "hook":
+        errs.append("slide 1 must be a hook")
     if slides and slides[-1].get("type") != "cta":
         errs.append("last slide must be a cta")
+    types = [s.get("type") for s in slides]
+    for i in range(len(types) - 2):
+        if types[i] == types[i + 1] == types[i + 2]:
+            errs.append(f"slides {i + 1}-{i + 3}: three {types[i]} slides in a row (vary the layout)")
     for i, s in enumerate(slides, 1):
-        limits = dict(LIMITS.get(s.get("type", "point"), {}))
-        if s.get("style") == "boxed" and not s.get("body"):
-            limits["title"] = (8, 3)  # a lone big question may take three lines
-        for field, (width, lines) in limits.items():
-            text = (s.get(field) or "").replace("==", "")
-            rows = text.split("\n") if text else []
-            if len(rows) > lines and field not in ("body", "sub"):
-                errs.append(f"slide {i} {field}: {len(rows)} lines (max {lines})")
-            if field in ("body", "sub"):
-                # Body text wraps by itself, so only its total length matters.
-                if len(text.replace(" ", "").replace("\n", "")) > width * lines:
-                    errs.append(f"slide {i} {field}: over {width * lines} chars")
-                continue
-            for row in rows:
-                if len(row.replace(" ", "")) > width:
-                    errs.append(f"slide {i} {field}: {row!r} is over {width} chars per line")
-        if s.get("type") == "compare" and not (s.get("wrong") and s.get("right")):
-            errs.append(f"slide {i}: compare needs wrong and right")
-        if s.get("type") == "quiz":
-            if not 2 <= len(s.get("options", [])) <= 3:
-                errs.append(f"slide {i}: quiz needs 2-3 options")
-            for o in s.get("options", []):
-                if len(o.replace(" ", "")) > 12:
-                    errs.append(f"slide {i} option {o!r} is over 12 chars")
-        if s.get("type") == "list":
-            items = s.get("items", [])
-            if not 3 <= len(items) <= 10:
-                errs.append(f"slide {i}: list needs 3-10 items")
-            width = 14 if len(items) <= 5 else 18  # 6+ rows switch to the dense layout
-            for it in items:
-                if len(it.replace(" ", "")) > width:
-                    errs.append(f"slide {i} item {it!r} is over {width} chars")
+        t = s.get("type")
+        if t not in FIELDS:
+            errs.append(f"slide {i}: unknown type {t!r}")
+            continue
+        for field in ("headline",) + FIELDS[t]:
+            if not s.get(field) and s.get(field) != 0:
+                errs.append(f"slide {i} ({t}): missing {field}")
+        head = s.get("headline", "")
+        if len(visible(head)) > 24:
+            errs.append(f"slide {i}: headline is {len(visible(head))} chars (max 24, two lines)")
+        if not MARK.search(head):
+            errs.append(f"slide {i}: headline needs one {{hl|..}} or {{red|..}} key word")
+        for pill in s.get("lines", []) + s.get("items", []):
+            if len(visible(pill)) > 10:
+                errs.append(f"slide {i}: pill {pill!r} is over 10 chars")
+        for row in s.get("rows", []):
+            if len(row) != 3:
+                errs.append(f"slide {i}: compare row needs [label, left, right]")
+            elif max(len(visible(v)) for v in row[1:]) > 9:
+                errs.append(f"slide {i}: compare row {row!r} has a value over 9 chars")
+        if t in ("hook", "highlight") and not 2 <= len(s.get("lines", [])) <= 3:
+            errs.append(f"slide {i}: {t} needs 2-3 lines")
+        if t == "compare" and not 2 <= len(s.get("rows", [])) <= 3:
+            errs.append(f"slide {i}: compare needs 2-3 rows")
+        if t == "checklist" and not 3 <= len(s.get("items", [])) <= 4:
+            errs.append(f"slide {i}: checklist needs 3-4 items")
+        for key, limit in (("reveal", 10), ("next", 12), ("value", 4), ("word", 5)):
+            if s.get(key) and len(visible(str(s[key]))) > limit:
+                errs.append(f"slide {i}: {key} {s[key]!r} is over {limit} chars")
+        for key in ("prop", "left_prop"):
+            if s.get(key) and s[key] not in PROPS:
+                errs.append(f"slide {i}: {key} {s[key]!r} has no illustration (see design.md prop list)")
         if i < len(slides) and not s.get("next"):
             errs.append(f"slide {i}: missing next teaser")
-        if s.get("image") and not s["image"].startswith("http") and not (ROOT / s["image"]).exists():
-            errs.append(f"slide {i}: image {s['image']} not found")
     if len(post["caption"]) > 2200:
         errs.append("caption over 2200 chars")
     if "http" in post["caption"]:
@@ -234,6 +245,7 @@ def main():
     ap = argparse.ArgumentParser(prog="cards")
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("render-due"); s.add_argument("--all", action="store_true")
+    s.add_argument("--pending", action="store_true", help="only list the posts that would be rendered")
     s = sub.add_parser("render"); s.add_argument("file")
     s = sub.add_parser("publish-due"); s.add_argument("--dry-run", action="store_true")
     s = sub.add_parser("check"); s.add_argument("files", nargs="*")

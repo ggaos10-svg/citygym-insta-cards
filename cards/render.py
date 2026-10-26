@@ -88,7 +88,7 @@ def _slide_body(s):
         photo = _img(s, "photo")
         return f"""
         {photo}
-        <div class="cover{' with-photo' if photo else ''}">
+        <div class="cover{' with-photo' if photo else ''}{' boxed' if s.get('style') == 'boxed' else ''}">
           {kicker}
           <h1 data-max="{300 if photo else 520}">{fmt_lines(s['title'])}</h1>
           <p class="sub">{fmt(s.get('sub'))}</p>
@@ -99,7 +99,7 @@ def _slide_body(s):
             for i, t in enumerate(s["items"], 1)
         )
         return f"""
-        <div class="mid">
+        <div class="mid{' dense' if len(s['items']) > 5 else ''}">
           {kicker or '<div class="kicker">캡처해두세요</div>'}
           <h2 data-max="240">{fmt_lines(s['title'])}</h2>
           <ol>{items}</ol>
@@ -111,6 +111,17 @@ def _slide_body(s):
           <h2 data-max="380">{fmt_lines(s['title'])}</h2>
           <p class="body">{fmt(s.get('body'))}</p>
           <div class="place">시티짐 금호점 · 금호역 1번 출구 앞</div>
+        </div>"""
+    if kind == "compare":
+        return f"""
+        <div class="mid">
+          {kicker}
+          <h2 data-max="250">{fmt_lines(s['title'])}</h2>
+          <div class="vs">
+            <div class="side bad"><span class="mark">✕</span><span>{fmt(s['wrong'])}</span></div>
+            <div class="side good"><span class="mark">○</span><span>{fmt(s['right'])}</span></div>
+          </div>
+          <p class="body">{fmt(s.get('body'))}</p>
         </div>"""
     if kind == "quiz":
         opts = "".join(
@@ -127,7 +138,7 @@ def _slide_body(s):
     no = f'<div class="no">{html.escape(s["no"])}</div>' if s.get("no") else ""
     photo = _img(s, "inset")
     return f"""
-        <div class="mid">
+        <div class="mid{' boxed' if s.get('style') == 'boxed' else ''}">
           {photo}{no or kicker}
           <h2 data-max="{250 if photo else 360}">{fmt_lines(s['title'])}</h2>
           <p class="body">{fmt(s.get('body'))}</p>
@@ -186,6 +197,22 @@ li .n{flex:none;width:72px;height:72px;border-radius:50%%;background:%(A)s;color
   padding:30px 34px;border:4px solid var(--line);border-radius:24px}
 .opt .n{flex:none;width:76px;height:76px;border-radius:50%%;background:%(A)s;color:#fff;font-size:42px;
   font-weight:900;display:flex;align-items:center;justify-content:center}
+.boxed .ln{margin-bottom:.12em}
+.boxed .ln>span{background:%(A)s;color:#fff;padding:0 .14em;border-radius:.06em}
+.boxed .mk{color:#fff}
+.series{position:absolute;top:52px;left:96px;z-index:3;font-size:30px;font-weight:900;letter-spacing:.04em;
+  color:var(--ink)}
+.series .mk{color:%(A)s}
+.dense ol{margin-top:30px}
+.dense li{font-size:42px;padding:16px 0;gap:24px}
+.dense li .n{width:58px;height:58px;font-size:30px}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:52px}
+.side{border-radius:28px;padding:40px 34px;font-size:48px;font-weight:800;line-height:1.3;
+  display:flex;flex-direction:column;gap:22px;border:4px solid var(--line)}
+.side .mark{font-size:96px;font-weight:900;line-height:1}
+.bad .mark{color:#FF4D4F}
+.good{border-color:%(A)s}
+.good .mark{color:%(A)s}
 .ln{display:block}
 .ln>span{display:inline-block}
 """ % {"W": W, "H": H, "A": ACCENT}
@@ -216,6 +243,9 @@ MOTION_CSS = """
 .motion .inset{animation:fadeUp .8s var(--e) both}
 .motion .next{animation:fadeUp .6s var(--e) 1.6s both,nudge 1.2s ease-in-out 2.2s infinite}
 .motion .rd{animation:bar .45s var(--e) .95s both,blink 1.6s ease-in-out 1.6s infinite;transform-origin:left}
+.motion .bad{animation:pop .6s var(--e) .8s both}
+.motion .good{animation:pop .6s var(--e) 1.1s both}
+.motion .series{animation:fade .5s var(--e) both}
 .motion .opt{animation:pop .6s var(--e) both;animation-delay:calc(.8s + var(--i) * .18s);transform-origin:left center}
 @keyframes fade{from{opacity:0}}
 @keyframes up{from{transform:translateY(110%%)}}
@@ -242,13 +272,14 @@ for (const h of document.querySelectorAll('[data-max]')) {
 """
 
 
-def slide_html(s, idx, total, theme, motion=False):
+def slide_html(s, idx, total, theme, motion=False, series=""):
     bg, ink, sub, line = THEMES[theme]
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
 {_font_faces()}
 :root{{--bg:{bg};--ink:{ink};--sub:{sub};--line:{line}}}
 {CSS}{MOTION_CSS if motion else ""}</style></head><body class="{theme}{' motion' if motion else ''}"><div class="card">
 {'<div class="glow"></div>' if motion else ''}
+{f'<div class="series">{fmt(series)}</div>' if series else ''}
 <div class="page">{idx} / {total}</div>
 {_slide_body(s)}
 {_teaser(s, idx, total)}
@@ -293,7 +324,7 @@ def render_post(post, out_dir=None):
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": W, "height": H})
         for i, s in enumerate(slides, 1):
-            page.set_content(slide_html(s, i, len(slides), s.get("theme") or theme, motion), wait_until="load")
+            page.set_content(slide_html(s, i, len(slides), s.get("theme") or theme, motion, post.get("series", "")), wait_until="load")
             page.evaluate("document.fonts.ready")
             page.evaluate(FIT_JS)
             jpg = out_dir / f"{i:02d}.jpg"

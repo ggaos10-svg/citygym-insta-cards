@@ -138,6 +138,7 @@ LIMITS = {
     "point": {"title": (8, 2), "body": (20, 2)},
     "list": {"title": (14, 1)},
     "quiz": {"title": (8, 2), "kicker": (10, 1)},
+    "compare": {"title": (8, 2), "wrong": (8, 2), "right": (8, 2), "body": (20, 2)},
     "cta": {"title": (10, 2), "body": (30, 3)},
 }
 
@@ -158,16 +159,19 @@ def check_post(path, post):
     except ValueError:
         errs.append("scheduled is not ISO 8601")
     slides = post["slides"]
-    if not 6 <= len(slides) <= 8:
-        errs.append(f"{len(slides)} slides (guide: 6-8)")
+    if not 6 <= len(slides) <= 12:
+        errs.append(f"{len(slides)} slides (guide: 6-12)")
     if slides and slides[0].get("type") not in ("cover", "quiz"):
         errs.append("slide 1 must be a cover or quiz")
-    if len(slides) > 1 and slides[1].get("type") not in ("point", "quiz"):
-        errs.append("slide 2 must be a point or quiz (the second half of the hook)")
+    if len(slides) > 1 and slides[1].get("type") not in ("point", "quiz", "compare"):
+        errs.append("slide 2 must be a point, quiz or compare (the second half of the hook)")
     if slides and slides[-1].get("type") != "cta":
         errs.append("last slide must be a cta")
     for i, s in enumerate(slides, 1):
-        for field, (width, lines) in LIMITS.get(s.get("type", "point"), {}).items():
+        limits = dict(LIMITS.get(s.get("type", "point"), {}))
+        if s.get("style") == "boxed" and not s.get("body"):
+            limits["title"] = (8, 3)  # a lone big question may take three lines
+        for field, (width, lines) in limits.items():
             text = (s.get(field) or "").replace("==", "")
             rows = text.split("\n") if text else []
             if len(rows) > lines and field not in ("body", "sub"):
@@ -180,6 +184,8 @@ def check_post(path, post):
             for row in rows:
                 if len(row.replace(" ", "")) > width:
                     errs.append(f"slide {i} {field}: {row!r} is over {width} chars per line")
+        if s.get("type") == "compare" and not (s.get("wrong") and s.get("right")):
+            errs.append(f"slide {i}: compare needs wrong and right")
         if s.get("type") == "quiz":
             if not 2 <= len(s.get("options", [])) <= 3:
                 errs.append(f"slide {i}: quiz needs 2-3 options")
@@ -187,11 +193,13 @@ def check_post(path, post):
                 if len(o.replace(" ", "")) > 12:
                     errs.append(f"slide {i} option {o!r} is over 12 chars")
         if s.get("type") == "list":
-            if not 3 <= len(s.get("items", [])) <= 5:
-                errs.append(f"slide {i}: list needs 3-5 items")
-            for it in s.get("items", []):
-                if len(it.replace(" ", "")) > 14:
-                    errs.append(f"slide {i} item {it!r} is over 14 chars")
+            items = s.get("items", [])
+            if not 3 <= len(items) <= 10:
+                errs.append(f"slide {i}: list needs 3-10 items")
+            width = 14 if len(items) <= 5 else 18  # 6+ rows switch to the dense layout
+            for it in items:
+                if len(it.replace(" ", "")) > width:
+                    errs.append(f"slide {i} item {it!r} is over {width} chars")
         if i < len(slides) and not s.get("next"):
             errs.append(f"slide {i}: missing next teaser")
         if s.get("image") and not s["image"].startswith("http") and not (ROOT / s["image"]).exists():

@@ -1,11 +1,12 @@
 import React from "react";
-import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { LABEL, MONO, N, NoteScene, POSE, middle } from "./note/note";
+import { Mascot } from "./art/Art";
 import { parse } from "./note/common";
 import { SANS, enter, slam } from "./note/pulse";
 
 // Card-news slide in the blog's "Note" look (cream paper, mono header, bold headline writing
-// itself word by word, app-window card with an isometric prop, the CityGym bear reacting),
+// itself word by word, app-window card with an isometric prop, the CityGym mascot reacting),
 // re-laid out for a 1080x1350 Instagram carousel slide.
 export type CardSlide = NoteScene & { headline: string; next?: string };
 export type CardProps = { slide: CardSlide; idx: number; total: number };
@@ -39,8 +40,8 @@ export const CardNote: React.FC<CardProps> = ({ slide, idx, total }) => {
   const bob = Math.sin(f / 8) * 6;
   const plus = (x: number, y: number) => <span style={{ position: "absolute", left: x, top: y, color: N.accent, fontSize: 34, fontWeight: 700 }}>+</span>;
   const nextOn = enter(f, 40, 10);
-  // the bear already acts inside these illustrations, so the corner bear would be a duplicate
-  const showsBear = [slide.prop, (slide as { left_prop?: string }).left_prop].some((p) => p && /^(squat_|chair)/.test(p));
+  // the mascot already acts inside these illustrations, so the corner one would be a duplicate
+  const showsMascot = [slide.prop, (slide as { left_prop?: string }).left_prop].some((p) => p && /^(squat_|chair)/.test(p));
   return (
     <AbsoluteFill style={{ background: N.paper, color: N.ink, fontFamily: SANS }}>
       <div style={{ position: "absolute", left: 64, right: 64, top: 44, display: "flex", justifyContent: "space-between", fontFamily: MONO, fontSize: 26, color: N.dim }}>
@@ -53,7 +54,7 @@ export const CardNote: React.FC<CardProps> = ({ slide, idx, total }) => {
         {middle(slide, "금호점", idx - 1)}
       </div>
       {plus(40, 380)}{plus(990, 380)}{plus(40, 1230)}
-      {!showsBear && <Img src={staticFile(`bear/${POSE[slide.type]}.webp`)} style={{ position: "absolute", right: -50, bottom: 40, width: 430, transform: `translateY(${bob + (1 - pop) * 90}px) scale(${0.9 + 0.1 * pop})` }} />}
+      {!showsMascot && <div style={{ position: "absolute", right: 10, bottom: 30, width: 380, height: 456, transform: `translateY(${bob + (1 - pop) * 90}px) scale(${0.9 + 0.1 * pop})` }}><Mascot pose={POSE[slide.type]} /></div>}
       {slide.next && idx < total && (
         <div style={{ position: "absolute", left: 64, bottom: 56, fontFamily: SANS, fontSize: 36, fontWeight: 900, color: "#fff", background: N.ink, border: "3px solid #fff", borderRadius: 999, padding: "12px 28px", boxShadow: `5px 5px 0 ${N.accent}`, opacity: nextOn, transform: `translateX(${(1 - nextOn) * -20 + Math.sin(f / 6) * 5}px)` }}>
           {slide.next} →

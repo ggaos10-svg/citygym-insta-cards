@@ -1,14 +1,14 @@
 import React from "react";
-import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
+import { useCurrentFrame } from "remotion";
 import { FPS, PUNCH, PropName, SceneSpec, parse } from "./common";
 import { Caption, SANS, enter, plain, slam } from "./pulse";
+import { CODE_PROPS } from "../art/Art";
 
 // "Note" — modelled on the reference reel (reference/ref.mp4): cream paper, mono header line,
 // a bold headline that writes itself word by word with the narration, a dense "app window" card
 // holding a hand-drawn isometric illustration, a terminal card and a sticker layered around it,
-// a cursor that clicks, and the CityGym bear reacting bottom-right.
-// Illustrations and bear poses: public/props/*.webp, public/bear/*.webp (Higgsfield gpt_image_2_5,
-// generated once from assets/character/bear_ref.webp, decision d-015).
+// a cursor that clicks, and the CityGym mascot reacting bottom-right.
+// Every illustration and the mascot are drawn in code: src/art/Art.tsx.
 
 export const N = { paper: "#F4EFE6", ink: "#1E1A16", accent: "#F0532A", dim: "#8C857B", line: "#D9D1C4", card: "#FFFDF8", term: "#1C1B1F" };
 export const MONO = "Consolas, 'D2Coding', monospace";
@@ -21,7 +21,11 @@ export const POSE: Record<SceneSpec["type"], Pose> = {
 };
 export const LABEL: Record<SceneSpec["type"], string> = { hook: "질문", section: "포인트", highlight: "핵심", stat: "숫자", compare: "비교", punch: "반전", checklist: "정리", cta: "위치" };
 const order: PropName[] = ["machines", "booty", "stairs", "sauna", "desk", "rack"];
-const img = (name: string) => staticFile(`props/${name}.webp`);
+// a prop drawn in code (art/Art.tsx); the checker only lets known names through
+export const Pic: React.FC<{ name: string; style?: React.CSSProperties }> = ({ name, style }) => {
+  const Art = CODE_PROPS[name];
+  return Art ? <div style={style}><Art /></div> : null;
+};
 
 // ---------------------------------------------------------------- headline: the narration, word by word
 
@@ -76,7 +80,7 @@ const Window: React.FC<{ fig: string; slug: string; pills: string[]; image?: str
           ))}
         </div>
         <div style={{ flex: 1, position: "relative" }}>
-          {image ? <Img src={img(image)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", transform: `translateY(${float}px)`, filter: gray ? "grayscale(1) opacity(0.7)" : "none" }} /> : null}
+          {image ? <Pic name={image} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", transform: `translateY(${float}px)`, filter: gray ? "grayscale(1) opacity(0.7)" : "none" }} /> : null}
           {corner ? <div style={{ position: "absolute", right: 4, top: 0, textAlign: "right" }}>{corner}</div> : null}
         </div>
       </div>
@@ -172,30 +176,8 @@ export const middle = (s: NoteScene, brand: string, index: number) => {
     </>;
     case "cta": return <>
       <Pop at={2} style={{ left: 40, top: 40 }}><Window fig={`CITYGYM — ${brand}`} slug="visit" pills={[plain(s.line), s.location]} image="building" /></Pop>
-      <Pop at={10} style={{ left: 420, top: 360 }}><Img src={img("subway")} style={{ width: 200 }} /></Pop>
+      <Pop at={10} style={{ left: 300, top: 380 }}><Pic name="subway" style={{ width: 220, height: 230 }} /></Pop>
       <Pop at={14} style={{ left: 330, top: 26 }} tilt={-5}><Sticker text={`📍 ${s.location}`} /></Pop>
     </>;
   }
 };
-
-// ---------------------------------------------------------------- scene
-
-const NoteCut: React.FC<{ s: NoteScene; brand: string; index: number }> = ({ s, brand, index }) => {
-  const f = useCurrentFrame();
-  const pop = slam(f, 0);
-  const bob = Math.sin(f / 8) * 5;
-  const plus = (x: number, y: number) => <span style={{ position: "absolute", left: x, top: y, color: N.accent, fontSize: 28, fontWeight: 700 }}>+</span>;
-  return (
-    <AbsoluteFill style={{ background: N.paper, color: N.ink, fontFamily: SANS }}>
-      <div style={{ position: "absolute", left: 56, right: 56, top: 36, display: "flex", justifyContent: "space-between", fontFamily: MONO, fontSize: 20, color: N.dim }}>
-        <span>// {String(index + 1).padStart(2, "0")} — {LABEL[s.type]}</span><span>citygym · 금호점 · 공식 블로그</span>
-      </div>
-      <div style={{ position: "absolute", left: 56, right: 56, top: 82 }}><Headline s={s} /></div>
-      <div style={{ position: "absolute", left: 50, top: 300, width: 720, height: 620 }}>{middle(s, brand, index)}</div>
-      {plus(36, 290)}{plus(780, 290)}{plus(36, 930)}
-      <Img src={staticFile(`bear/${POSE[s.type]}.png`)} style={{ position: "absolute", right: -40, bottom: -30, width: 400, transform: `translateY(${bob + (1 - pop) * 80}px) scale(${0.9 + 0.1 * pop})` }} />
-    </AbsoluteFill>
-  );
-};
-
-export const renderNote = (scene: SceneSpec, brand: string, index: number) => <NoteCut s={scene as NoteScene} brand={brand} index={index} />;

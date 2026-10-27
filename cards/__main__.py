@@ -232,6 +232,15 @@ def check_note(slides):
             errs.append(f"slide {i}: scene {sc!r} not available for {s.get('type')} ({', '.join(SCENES.get(s.get('type'), ()))})")
         if sc == "comic" and len(s.get("lines", [])) != 2:
             errs.append(f"slide {i}: comic scene needs exactly 2 lines (one per panel)")
+        # bubbles and diagram labels are narrow: longer text wraps and strands a word on its own line
+        if sc == "comic":
+            for line in s.get("lines", []):
+                if len(visible(line)) > 6:
+                    errs.append(f"slide {i}: comic bubble {line!r} is over 6 chars (wraps)")
+        if sc == "diagram":
+            for line in ([s.get("title")] if s.get("type") == "section" else s.get("lines", [])):
+                if line and len(visible(line)) > 5:
+                    errs.append(f"slide {i}: diagram label {line!r} is over 5 chars (wraps)")
     for i in range(len(scenes) - 1):
         if scenes[i] == scenes[i + 1] and scenes[i] != "app":
             errs.append(f"slides {i + 1}-{i + 2}: same scene {scenes[i]!r} twice in a row")

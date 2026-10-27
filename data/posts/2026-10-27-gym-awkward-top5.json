@@ -21,8 +21,8 @@
       "type": "highlight",
       "headline": "5위는 귀여운 편\n{hl|1위}는 다 겪어요",
       "lines": [
-        "5위는 귀여운 편",
-        "1위는 나도 했음"
+        "5위는 웃음",
+        "1위는 이불킥"
       ],
       "prop": "machines",
       "next": "5위 공개"
@@ -31,7 +31,7 @@
       "type": "section",
       "headline": "5위 러닝머신\n{red|멈추는 법} 모름",
       "num": 5,
-      "title": "정지 버튼 어디?",
+      "title": "정지 버튼?",
       "prop": "treadmill",
       "next": "4위는 원판"
     },
@@ -39,8 +39,8 @@
       "type": "highlight",
       "headline": "4위 원판 끼운 채\n{red|그냥} 집에 감",
       "lines": [
-        "다음 사람이 빼요",
-        "내 원판 아닌데?"
+        "다음 사람 몫",
+        "내 거 아님?"
       ],
       "prop": "rack",
       "next": "3위는 부티빌더"
@@ -49,14 +49,14 @@
       "type": "section",
       "headline": "3위 부티빌더\n{red|방향}을 모름",
       "num": 3,
-      "title": "어느 쪽으로 앉지?",
+      "title": "앉는 방향?",
       "prop": "booty",
       "next": "2위는 거울 앞"
     },
     {
       "type": "punch",
       "headline": "2위 거울 셀카 중\n{red|눈} 마주침",
-      "word": "눈 마주침",
+      "word": "얼음",
       "sub": "둘 다 못 본 척",
       "next": "1위는 다 겪어요"
     },
@@ -64,14 +64,14 @@
       "type": "section",
       "headline": "1위 천국의계단에\n{red|매달리다} 들킴",
       "num": 1,
-      "title": "손잡이는 가볍게",
+      "title": "손은 가볍게",
       "prop": "stairs",
       "next": "보낼 사람 있죠"
     },
     {
       "type": "cta",
       "headline": "헬스장 친구한테\n{red|보내요}",
-      "line": "몇 위까지 겪었나요?\n댓글로 1~5",
+      "line": "몇 위까지?\n댓글로 1~5",
       "location": "금호역 1번 출구 앞"
     }
   ],

@@ -1,0 +1,79 @@
+{
+  "id": "2026-10-27-gym-awkward-top5",
+  "design": "note",
+  "scheduled": "2026-10-27T17:30:00+09:00",
+  "status": "pending",
+  "topic": "fun",
+  "note": "자체평가 중",
+  "slides": [
+    {
+      "type": "hook",
+      "headline": "헬스장에서 제일\n{red|민망한} 순간은?",
+      "lines": [
+        "헬스장 민망 순간",
+        "다들 한 번씩"
+      ],
+      "reveal": "TOP5 역순",
+      "prop": "treadmill",
+      "next": "5위부터 갈게요"
+    },
+    {
+      "type": "highlight",
+      "headline": "5위는 귀여운 편\n{hl|1위}는 다 겪어요",
+      "lines": [
+        "5위는 귀여운 편",
+        "1위는 나도 했음"
+      ],
+      "prop": "machines",
+      "next": "5위 공개"
+    },
+    {
+      "type": "section",
+      "headline": "5위 러닝머신\n{red|멈추는 법} 모름",
+      "num": 5,
+      "title": "정지 버튼 어디?",
+      "prop": "treadmill",
+      "next": "4위는 원판"
+    },
+    {
+      "type": "highlight",
+      "headline": "4위 원판 끼운 채\n{red|그냥} 집에 감",
+      "lines": [
+        "다음 사람이 빼요",
+        "내 원판 아닌데?"
+      ],
+      "prop": "rack",
+      "next": "3위는 부티빌더"
+    },
+    {
+      "type": "section",
+      "headline": "3위 부티빌더\n{red|방향}을 모름",
+      "num": 3,
+      "title": "어느 쪽으로 앉지?",
+      "prop": "booty",
+      "next": "2위는 거울 앞"
+    },
+    {
+      "type": "punch",
+      "headline": "2위 거울 셀카 중\n{red|눈} 마주침",
+      "word": "눈 마주침",
+      "sub": "둘 다 못 본 척",
+      "next": "1위는 다 겪어요"
+    },
+    {
+      "type": "section",
+      "headline": "1위 천국의계단에\n{red|매달리다} 들킴",
+      "num": 1,
+      "title": "손잡이는 가볍게",
+      "prop": "stairs",
+      "next": "보낼 사람 있죠"
+    },
+    {
+      "type": "cta",
+      "headline": "헬스장 친구한테\n{red|보내요}",
+      "line": "몇 위까지 겪었나요?\n댓글로 1~5",
+      "location": "금호역 1번 출구 앞"
+    }
+  ],
+  "caption": "헬스장에서 이거 다 겪어봤으면, 운동 좀 다녀본 사람이에요.\n\n러닝머신 정지 버튼 찾기, 원판 끼운 채 퇴근, 부티빌더 방향 헷갈리기. 처음엔 다 그래요. 1위는 천국의계단 타는 분이라면 한 번쯤 본 장면이에요. 참고로 손잡이는 가볍게만 잡아야 다리에 더 잘 들어가요.\n\n몇 위까지 겪어봤는지 댓글로 남겨주세요.\n\n시티짐 금호점 · 금호역 1번 출구 바로 앞\n상담 예약은 프로필 링크에서\n\n#금호역헬스장 #성동구헬스장 #헬스장공감 #헬스초보"
+}

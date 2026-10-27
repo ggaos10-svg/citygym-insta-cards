@@ -4,9 +4,9 @@
 Instagram 토큰은 없고 필요 없다. 게시·렌더링은 GitHub Actions가 한다. 루틴은 `data/posts/`에 JSON 하나를 쓰고 push만 한다.
 
 1. `git pull --rebase`.
-2. 읽기: `cards/config/guide.md` (전부, 그대로 따른다), `cards/config/design.md` (Note 디자인: 장 종류·필드·그림 목록, 전부), `cards/config/design-pano.md` (가로 잇기 디자인, 전부), `cards/config/hooks.md` (후킹 라이브러리, 전부), `cards/config/review.md` (게시 전 자체평가 지침, 전부), `cards/config/facts.md` (센터 정보는 여기 있는 것만), `remotion/src/art/Art.tsx` 맨 아래 `CODE_PROPS` (쓸 수 있는 그림 이름, design.md 목록과 같다), `data/posts/`의 최근 게시물 10개 (`python -m cards list`).
+2. 읽기: `cards/config/guide.md` (전부, 그대로 따른다), `cards/config/design.md` (Note 디자인: 장 종류·필드·그림 목록, 전부), `cards/config/design-pano.md` (가로 잇기 디자인, 전부), `cards/config/hooks.md` (후킹 라이브러리, 전부), `cards/config/review.md` (게시 전 자체평가 지침, 전부), `cards/config/facts.md` (센터 정보는 여기 있는 것만), `cards/config/schedule.md` (날짜별 일정표), `remotion/src/art/Art.tsx` 맨 아래 `CODE_PROPS` (쓸 수 있는 그림 이름, design.md 목록과 같다), `data/posts/`의 최근 게시물 10개 (`python -m cards list`).
 3. 오늘 날짜(KST)로 `data/posts/YYYY-MM-DD-*.json`이 이미 있으면 새로 쓰지 않는다. 그 글에 `review`가 없거나 통과 기준 미달이고 상태가 `published`가 아니면 7번(자체평가)만 하고, 아니면 8번으로 간다.
-4. 주제 고르기: guide 1장의 비율(tip 4 · gym 2 · fun 1 / 7개)과 최근 게시물을 보고 부족한 유형을 고른다. 최근 주제·첫 문장과 겹치지 않게.
+4. 주제 고르기: **schedule.md에 오늘 날짜(KST) 항목이 있으면 그 주제·유형·디자인·각도를 그대로 쓴다** (훅 후보 3개 중 하나는 일정표의 훅으로, 장 구성은 일정표를 따르되 규칙에 맞게 다듬는다). 항목이 없을 때만: guide 1장의 비율(tip 4 · gym 2 · fun 1 / 7개)과 최근 게시물을 보고 부족한 유형을 고른다. 최근 주제·첫 문장과 겹치지 않게.
    - **훅 세트(1·2장) 후보를 3개** 쓴다. 각각 guide 2장 표의 서로 다른 공식 + hooks.md 8유형 중 하나로, 직전 게시물의 공식·유형은 제외. 후보마다 쓴 유형과 3가지 금기 적용을 적는다.
    - 후보마다 1~5점으로 매긴다: ① 1장만 보고 '어? 뭐지?'가 드는가 ② 2장이 답을 주지 않고 궁금증을 더 키우는가 ③ 금호동 운동하는 사람이 "나 얘기네" 할 만큼 구체적인가 ④ 1·2장 어디에도 답이 새지 않았는가.
    - 합계가 가장 높은 후보로 쓴다. 15점 미만이면 후보를 다시 쓴다.
@@ -25,4 +25,4 @@ Instagram 토큰은 없고 필요 없다. 게시·렌더링은 GitHub Actions가
    - `media/<id>/review.jpg`와 `media/<id>/01.jpg`를 **이미지로 열어서 보고**, review.md 2장의 14개 항목을 1~10점으로 매긴다. "피드에 떴을 때 멈출까 / 어디까지 넘길까 / 어디서 이탈할까"를 먼저 쓴다.
    - 통과 기준(평균 8.0 이상, 7점 미만 없음, 사실 위반 0)에 못 미치면 가장 낮은 항목부터 게시물 JSON을 고치고 `python -m cards check`를 통과시킨 뒤 6번처럼 커밋·push, 렌더를 다시 기다려 다시 평가한다. 최대 3번.
    - 게시물 JSON에 `review`(review.md 4장 형식)를 적는다. 통과하면 `status: approved`, `note` 삭제 (사실 확인이 필요한 글은 `pending` 유지). 3번째에도 못 미치면 `pending` + `note`에 남은 문제. 커밋·push (`routine: card review <id>`).
-8. 마지막 메시지(한국어): 파일 이름, 상태(approved/pending), 고른 훅 공식과 점수(버린 후보 2개도 한 줄씩), 장별 한 줄 요약, pending이면 운영자가 확인할 것 (새 그림을 그렸으면 그 이름), 그리고 review.md 5장 형식의 자체평가 보고 (멈출까/넘길까/이탈 지점, 14개 점수 표와 평균, 라운드별로 고친 것, 남은 약점).
+8. 마지막 메시지(한국어): 일정표 항목을 썼는지(바꾼 점이 있으면 이유), 파일 이름, 상태(approved/pending), 고른 훅 공식과 점수(버린 후보 2개도 한 줄씩), 장별 한 줄 요약, pending이면 운영자가 확인할 것 (새 그림을 그렸으면 그 이름), 그리고 review.md 5장 형식의 자체평가 보고 (멈출까/넘길까/이탈 지점, 14개 점수 표와 평균, 라운드별로 고친 것, 남은 약점).

@@ -54,7 +54,7 @@ export const CardNote: React.FC<CardProps> = ({ slide, idx, total }) => {
         {middle(slide, "금호점", idx - 1)}
       </div>
       {plus(40, 380)}{plus(990, 380)}{plus(40, 1230)}
-      {!showsMascot && <div style={{ position: "absolute", right: 10, bottom: 30, width: 380, height: 456, transform: `translateY(${bob + (1 - pop) * 90}px) scale(${0.9 + 0.1 * pop})` }}><Mascot pose={POSE[slide.type]} /></div>}
+      {!showsMascot && <div style={{ position: "absolute", right: -40, bottom: 0, width: 300, height: 360, transform: `translateY(${bob + (1 - pop) * 90}px) scale(${0.9 + 0.1 * pop})` }}><Mascot pose={POSE[slide.type]} /></div>}
       {slide.next && idx < total && (
         <div style={{ position: "absolute", left: 64, bottom: 56, fontFamily: SANS, fontSize: 36, fontWeight: 900, color: "#fff", background: N.ink, border: "3px solid #fff", borderRadius: 999, padding: "12px 28px", boxShadow: `5px 5px 0 ${N.accent}`, opacity: nextOn, transform: `translateX(${(1 - nextOn) * -20 + Math.sin(f / 6) * 5}px)` }}>
           {slide.next} →

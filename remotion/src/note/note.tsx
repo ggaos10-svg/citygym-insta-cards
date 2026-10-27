@@ -61,7 +61,7 @@ const Pop: React.FC<{ at: number; children: React.ReactNode; style?: React.CSSPr
 };
 
 // App window: tab "Fig. 0N — label", URL bar, button list on the left, illustration on the right.
-const Window: React.FC<{ fig: string; slug: string; pills: string[]; image?: string; corner?: React.ReactNode; gray?: boolean; w?: number; h?: number; split?: number }> = ({ fig, slug, pills, image, corner, gray, w = 690, h = 560, split = 0.36 }) => {
+const Window: React.FC<{ fig: string; slug: string; pills: string[]; image?: string; corner?: React.ReactNode; gray?: boolean; w?: number; h?: number; split?: number }> = ({ fig, slug, pills, image, corner, gray, w = 690, h = 560, split = 0.46 }) => {
   const stack = split >= 1; // pills on top, illustration full width below
   const f = useCurrentFrame();
   const float = Math.sin(f / 14) * 5;
@@ -76,7 +76,7 @@ const Window: React.FC<{ fig: string; slug: string; pills: string[]; image?: str
         <div style={{ width: stack ? "100%" : w * split, display: "flex", flexDirection: "column", gap: 9, paddingTop: 6 }}>
           <div style={{ fontSize: 13, color: N.dim, letterSpacing: 1 }}>{fig.toUpperCase().slice(0, 7)} · OPTIONS</div>
           {pills.slice(0, 4).map((p, i) => (
-            <div key={i} style={{ opacity: enter(f, 8 + i * 3), border: `1.8px solid ${N.ink}`, borderRadius: 999, padding: "6px 14px", fontFamily: SANS, fontWeight: 800, fontSize: 25, background: i === 1 ? N.accent : "transparent", color: i === 1 ? "#fff" : N.ink, wordBreak: "keep-all" }}>{p}</div>
+            <div key={i} style={{ opacity: enter(f, 8 + i * 3), border: `1.8px solid ${N.ink}`, borderRadius: 999, padding: "6px 14px", fontFamily: SANS, fontWeight: 800, fontSize: 30, lineHeight: 1.25, background: i === 1 ? N.accent : "transparent", color: i === 1 ? "#fff" : N.ink, wordBreak: "keep-all" }}>{p}</div>
           ))}
         </div>
         <div style={{ flex: 1, position: "relative" }}>
@@ -164,9 +164,9 @@ export const middle = (s: NoteScene, brand: string, index: number) => {
       <Pop at={12} style={{ left: 300, top: 14 }} tilt={-8}><Sticker text="VS" /></Pop>
     </>;
     case "punch": return <>
-      <Pop at={0} style={{ left: 60, top: 110 }} tilt={-3}>
-        <div style={{ background: N.card, border: `3px solid ${N.ink}`, borderRadius: 16, boxShadow: `8px 8px 0 ${N.accent}`, padding: "34px 44px" }}>
-          <Big size={140} color={N.accent}>{s.word}</Big>{s.sub ? <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: 32, marginTop: 10 }}>{plain(s.sub)}</div> : null}
+      <Pop at={0} style={{ left: 30, top: 40 }} tilt={-3}>
+        <div style={{ background: N.card, border: `3px solid ${N.ink}`, borderRadius: 16, boxShadow: `10px 10px 0 ${N.accent}`, padding: "40px 56px", maxWidth: 560 }}>
+          <Big size={200} color={N.accent}>{s.word}</Big>{s.sub ? <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: 40, marginTop: 14, wordBreak: "keep-all" }}>{plain(s.sub)}</div> : null}
         </div>
       </Pop>
     </>;

@@ -2,6 +2,7 @@
 
   python -m cards render-due [--all] [--pending]  render (or list) posts without videos yet (Remotion)
   python -m cards render <post.json>      (re)render one post
+  python -m cards rendered <post.json>    exit 0 if this version's videos + review.jpg exist
   python -m cards publish-due [--dry-run] publish approved posts whose time has passed
   python -m cards whoami
   python -m cards refresh-token           refresh if older than 7 days (writes $IG_TOKEN_OUT)
@@ -18,7 +19,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from .render import MEDIA, PROPS, ROOT, render_post
+from .render import MEDIA, PROPS, ROOT, fingerprint, render_post
 
 POSTS = ROOT / "data" / "posts"
 STATE = ROOT / "data" / "state.json"
@@ -50,8 +51,11 @@ def save(path, post):
 
 
 def rendered(post):
+    """Videos exist for exactly this version of the post (see render.fingerprint)."""
     d = MEDIA / post["id"]
-    return d.exists() and len(list(d.glob("*.mp4"))) == len(post["slides"])
+    stamp = d / "source.sha1"
+    return (len(list(d.glob("*.mp4"))) == len(post["slides"]) and stamp.exists()
+            and stamp.read_text(encoding="utf-8").strip() == fingerprint(post))
 
 
 def media_urls(post):
@@ -85,6 +89,14 @@ def cmd_render(args):
     post = json.loads(Path(args.file).read_text(encoding="utf-8"))
     for p in render_post(post, args.file):
         print(p)
+
+
+def cmd_rendered(args):
+    """Exit 0 when the post's current version has been rendered (the routine polls this)."""
+    post = json.loads(Path(args.file).read_text(encoding="utf-8"))
+    ok = rendered(post)
+    print("rendered" if ok else "not rendered yet")
+    sys.exit(0 if ok else 1)
 
 
 def cmd_publish_due(args):
@@ -177,7 +189,17 @@ def check_post(path, post):
         errs.append("caption over 2200 chars")
     if "http" in post["caption"]:
         errs.append("caption has a URL (not clickable on Instagram)")
+    # machine fingerprints (ig-human): invisible characters and typographic tells anywhere in the post
+    text = json.dumps(post, ensure_ascii=False)
+    if INVISIBLE.search(text):
+        errs.append("post has invisible characters (zero-width / non-breaking spaces)")
+    for ch, name in (("—", "em dash"), ("…", "ellipsis character"), ("“", "curly quotes"), ("”", "curly quotes")):
+        if ch in text:
+            errs.append(f"post has an {name}; use plain punctuation")
     return errs
+
+
+INVISIBLE = re.compile("[­ ​-‏ - ⁠-⁯﻿]")
 
 
 def check_note(slides):
@@ -192,6 +214,10 @@ def check_note(slides):
     for i in range(len(types) - 2):
         if types[i] == types[i + 1] == types[i + 2]:
             errs.append(f"slides {i + 1}-{i + 3}: three {types[i]} slides in a row (vary the layout)")
+    pics = [s.get("prop") or s.get("left_prop") for s in slides]
+    for i in range(len(pics) - 2):
+        if pics[i] and pics[i] == pics[i + 1] == pics[i + 2]:
+            errs.append(f"slides {i + 1}-{i + 3}: the same picture {pics[i]!r} three times in a row")
     for i, s in enumerate(slides, 1):
         t = s.get("type")
         if t not in FIELDS:
@@ -310,6 +336,7 @@ def main():
     s = sub.add_parser("render-due"); s.add_argument("--all", action="store_true")
     s.add_argument("--pending", action="store_true", help="only list the posts that would be rendered")
     s = sub.add_parser("render"); s.add_argument("file")
+    s = sub.add_parser("rendered"); s.add_argument("file")
     s = sub.add_parser("publish-due"); s.add_argument("--dry-run", action="store_true")
     s = sub.add_parser("check"); s.add_argument("files", nargs="*")
     sub.add_parser("whoami"); sub.add_parser("refresh-token"); sub.add_parser("list")

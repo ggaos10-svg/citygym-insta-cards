@@ -214,6 +214,33 @@ export const MascotSide: React.FC<{ pose: SidePose }> = ({ pose }) => {
   return <Paper viewBox={vb}>{chair}<SideBody s={mix(STAND, { shin: 6, thigh: 92, torso: 16, expr: "smile" }, k)} /></Paper>;
 };
 
+// hip thrust from the side: upper back on a bench, feet flat, hips rising until the thigh is
+// level; at the top the shin is vertical (dashed guide) and the knee is a right angle.
+export const HipThrust: React.FC = () => {
+  const t = useCurrentFrame() / 30;
+  const k = Math.min(1, (0.5 + 0.5 * Math.cos((t / 2) * TAU)) * 1.6); // 1 = top at 0, 2, 4 s
+  const r = (d: number) => (d * Math.PI) / 180;
+  const ankle = [300, 416], knee = [300 - 10 * (1 - k), 312];
+  const a = r(48 * (1 - k)); // thigh angle below level
+  const hip = [knee[0] - 104 * Math.cos(a), knee[1] + 104 * Math.sin(a)];
+  const shoulder = [112, 300];
+  const mid = [(hip[0] + shoulder[0]) / 2, (hip[1] + shoulder[1]) / 2 - 18];
+  const tilt = (Math.atan2(hip[1] - shoulder[1], hip[0] - shoulder[0]) * 180) / Math.PI;
+  return (
+    <Paper viewBox="0 40 420 430">
+      <ellipse cx={220} cy={432} rx={190} ry={16} fill={SHADOW} />
+      <rect x={20} y={300} width={120} height={30} rx={8} fill="#C77A3E" stroke={INK} strokeWidth={6} />
+      {[34, 112].map((x) => <rect key={x} x={x} y={326} width={16} height={104} rx={5} fill="#B66A33" stroke={INK} strokeWidth={6} />)}
+      <g transform={`translate(${mid[0]} ${mid[1]}) rotate(${tilt}) scale(0.56)`}><Mochi face={k > 0.7 ? "focus" : "smile"} t={t} shadow={false} /></g>
+      <ellipse cx={ankle[0] + 16} cy={ankle[1] + 6} rx={30} ry={13} fill={INK} />
+      <Stick pts={[hip, knee, ankle]} />
+      <circle cx={hip[0]} cy={hip[1]} r={9} fill={INK} />
+      <path d={`M${ankle[0]} ${ankle[1] + 6} V${knee[1] - 40}`} stroke={ORANGE} strokeWidth={5} strokeDasharray="12 9" opacity={k} />
+      <path d={`M${knee[0] - 30} ${knee[1]} h30 v30`} stroke={ORANGE} strokeWidth={5} fill="none" opacity={k} />
+    </Paper>
+  );
+};
+
 // ---------------------------------------------------------------- isometric props
 
 const C30 = Math.cos(Math.PI / 6), S30 = 0.5;
@@ -599,6 +626,7 @@ export const CODE_PROPS: Record<string, React.FC> = {
   squat_heels: () => <MascotSide pose="squat_heels" />,
   chair: () => <MascotSide pose="chair" />,
   feet_stance: FeetStance,
+  hip_thrust: HipThrust,
   machines: Machines,
   stairs: Stairs,
   treadmill: Treadmill,

@@ -157,6 +157,18 @@ FIELDS = {
     "punch": ("word",), "checklist": ("title", "items"), "cta": ("line", "location"),
 }
 MARK = re.compile(r"\{(hl|red)\|([^}]*)\}")
+# per-slide scenes (remotion/src/note/scenes.tsx): allowed per type, first is the default
+SCENES = {
+    "hook": ("big", "comic", "app"), "highlight": ("comic", "diagram", "app"), "section": ("diagram", "app"),
+    "stat": ("app", "big"), "compare": ("app",), "punch": ("big",), "checklist": ("memo", "app"), "cta": ("diorama", "app"),
+}
+
+
+def default_scene(s):
+    """Same rule as defaultScene in scenes.tsx."""
+    if s.get("type") == "highlight" and len(s.get("lines", [])) != 2:
+        return "diagram"
+    return SCENES.get(s.get("type"), ("app",))[0]
 
 
 def visible(text):
@@ -214,6 +226,15 @@ def check_note(slides):
     for i in range(len(types) - 2):
         if types[i] == types[i + 1] == types[i + 2]:
             errs.append(f"slides {i + 1}-{i + 3}: three {types[i]} slides in a row (vary the layout)")
+    scenes = [s.get("scene") or default_scene(s) for s in slides]
+    for i, (s, sc) in enumerate(zip(slides, scenes), 1):
+        if sc not in SCENES.get(s.get("type"), ()):
+            errs.append(f"slide {i}: scene {sc!r} not available for {s.get('type')} ({', '.join(SCENES.get(s.get('type'), ()))})")
+        if sc == "comic" and len(s.get("lines", [])) != 2:
+            errs.append(f"slide {i}: comic scene needs exactly 2 lines (one per panel)")
+    for i in range(len(scenes) - 1):
+        if scenes[i] == scenes[i + 1] and scenes[i] != "app":
+            errs.append(f"slides {i + 1}-{i + 2}: same scene {scenes[i]!r} twice in a row")
     pics = [s.get("prop") or s.get("left_prop") for s in slides]
     for i in range(len(pics) - 2):
         if pics[i] and pics[i] == pics[i + 1] == pics[i + 2]:

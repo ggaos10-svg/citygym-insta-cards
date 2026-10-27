@@ -15,7 +15,7 @@ Instagram 토큰은 없고 필요 없다. 게시·렌더링은 GitHub Actions가
    - 디자인 고르기: 주제가 "1 → 2 → 3" 단계(2~5개)로 말할 수 있고, 직전 2개 게시물에 가로 잇기가 없으면 `"design": "pano"`(design-pano.md 2·4장 형식). 그 밖에는 `"design": "note"`(design.md 3장 형식).
    - `id`는 파일 이름과 같게, `scheduled`는 `YYYY-MM-DDT19:00:00+09:00`, `topic` 기입. 장마다 고른 디자인의 필드를 쓴다.
    - `status`: 처음엔 항상 `pending` + `"note": "자체평가 중"` (평가를 통과하기 전에 게시되지 않게). 7번에서 통과하면 `approved`로 바꾼다. 통증·질환·다이어트 효과·가격·이벤트·센터 공지처럼 사실 확인이 필요한 글은 통과해도 `pending`으로 두고 `note`에 사람이 확인할 것을 적는다.
-   - Note: 모든 장(마지막 제외)에 `next`. 가로 잇기: `next` 없음, 게시물에 `label`·`handle`. 공통: 1장은 답을 주지 않고, 마지막 장(`cta`)은 공유 대상 + 한 글자 댓글 질문. 같은 type 3장 연속 금지.
+   - Note: 장마다 연출(`scene`)은 design.md 3-2. 기본값으로 충분하면 적지 않아도 되고, 바꿀 땐 같은 연출이 2장 연속되지 않게. 모든 장(마지막 제외)에 `next`. 가로 잇기: `next` 없음, 게시물에 `label`·`handle`. 공통: 1장은 답을 주지 않고, 마지막 장(`cta`)은 공유 대상 + 한 글자 댓글 질문. 같은 type 3장 연속 금지.
    - 그림(`prop`, `left_prop`)은 헤드라인 내용과 맞는 것만. 맞는 그림이 없으면 그 장을 `punch`/`checklist`로 바꾸거나, 꼭 필요하면 design.md 3-1대로 `Art.tsx`에 새 그림을 코드로 그려 `CODE_PROPS`에 등록한다 (게시물 하나에 새 그림 1개까지). 새 그림을 넣었으면 그 게시물은 `status: pending` + `note`에 "새 그림: ○○ — 렌더된 영상 확인"을 적는다.
    - `python -m cards check data/posts/<파일>.json`이 OK가 될 때까지 문구를 줄이거나 고친다. 통과 못 하면 커밋하지 않는다.
    - 캡션은 guide 5장 형식. em dash(—)·"완벽 가이드" 같은 AI 티 나는 표현 금지.

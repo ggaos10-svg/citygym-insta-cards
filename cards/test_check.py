@@ -19,6 +19,12 @@ bad["slides"][0]["headline"] = "강조 단어가 없는 아주아주 긴 헤드�
 errs = "\n".join(check_post(path, bad))
 for needle in ("three compare slides in a row", "'unicorn' has no illustration", "max 9", "key word"):
     assert needle in errs, (needle, errs)
+bad = copy.deepcopy(good)
+bad["slides"][0]["scene"] = "memo"  # not a hook scene
+bad["slides"][1]["scene"] = bad["slides"][2]["scene"] = "diagram"  # same scene twice
+errs = "\n".join(check_post(path, bad))
+for needle in ("scene 'memo' not available", "same scene 'diagram' twice"):
+    assert needle in errs, (needle, errs)
 print("check_post self-check OK")
 
 # Pano design

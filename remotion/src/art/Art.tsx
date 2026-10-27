@@ -227,7 +227,7 @@ export const HipThrust: React.FC = () => {
   const mid = [(hip[0] + shoulder[0]) / 2, (hip[1] + shoulder[1]) / 2 - 18];
   const tilt = (Math.atan2(hip[1] - shoulder[1], hip[0] - shoulder[0]) * 180) / Math.PI;
   return (
-    <Paper viewBox="0 40 420 430">
+    <Paper viewBox="10 170 390 285">
       <ellipse cx={220} cy={432} rx={190} ry={16} fill={SHADOW} />
       <rect x={20} y={300} width={120} height={30} rx={8} fill="#C77A3E" stroke={INK} strokeWidth={6} />
       {[34, 112].map((x) => <rect key={x} x={x} y={326} width={16} height={104} rx={5} fill="#B66A33" stroke={INK} strokeWidth={6} />)}

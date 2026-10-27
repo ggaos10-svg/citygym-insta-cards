@@ -1,0 +1,72 @@
+{
+  "id": "2026-10-27-stairs-hands",
+  "design": "note",
+  "scheduled": "2026-10-27T17:30:00+09:00",
+  "status": "pending",
+  "topic": "gym",
+  "note": "자체평가 중",
+  "slides": [
+    {
+      "type": "hook",
+      "headline": "천국의계단 30분\n{red|충분할까}?",
+      "lines": ["천국의계단 30분", "땀은 나는데"],
+      "reveal": "정답은 다음 장",
+      "prop": "stairs",
+      "next": "시간 말고 이것"
+    },
+    {
+      "type": "highlight",
+      "headline": "시간보다\n{hl|손}이 문제예요",
+      "lines": ["30분 탔는데", "다리는 멀쩡"],
+      "prop": "stopwatch",
+      "next": "손이 왜?"
+    },
+    {
+      "type": "section",
+      "headline": "① 손잡이에 매달리면\n다리가 {red|쉬어요}",
+      "num": 1,
+      "title": "손에 체중",
+      "prop": "stairs",
+      "next": "그럼 어떻게?"
+    },
+    {
+      "type": "compare",
+      "headline": "같은 30분\n{red|손}만 달라요",
+      "left": "매달리기",
+      "right": "가볍게 짚기",
+      "rows": [["", "다리 덜 씀", "다리 다 씀"], ["", "상체 뒤로", "상체 살짝 앞"]],
+      "left_prop": "stairs",
+      "prop": "stairs",
+      "next": "손은 이렇게"
+    },
+    {
+      "type": "punch",
+      "headline": "② 손은 {hl|가볍게}\n살짝 짚기만",
+      "word": "살짝",
+      "sub": "상체는 조금 앞으로",
+      "next": "센터 얘기 하나"
+    },
+    {
+      "type": "stat",
+      "headline": "저녁 7~9시 대기\n그래서 {red|8대}로",
+      "value": "8대",
+      "caption": "천국의계단",
+      "prop": "stairs",
+      "next": "캡처용 정리"
+    },
+    {
+      "type": "checklist",
+      "headline": "타기 전에\n{red|캡처}해두세요",
+      "title": "천국의계단 체크",
+      "items": ["손은 가볍게", "상체 살짝 앞", "발 전체로", "시간은 그다음"],
+      "next": "보낼 사람 있죠"
+    },
+    {
+      "type": "cta",
+      "headline": "천국의계단 타는\n친구한테 {red|보내요}",
+      "line": "평소 몇 분 타요?\n댓글로 10·20·30",
+      "location": "금호역 1번 출구 앞"
+    }
+  ],
+  "caption": "천국의계단 30분 탔는데 다리가 멀쩡하다면, 손부터 보세요.\n\n손잡이에 체중을 실으면 다리가 덜 일해요. 손은 가볍게 짚고, 상체는 살짝 앞으로, 발 전체로 딛기. 시간보다 이게 먼저예요.\n\n시티짐 금호점은 저녁 7~9시 대기를 줄이려고 천국의계단을 8대로 늘렸어요.\n\n평소 몇 분 타는지 댓글로 남겨주세요.\n\n시티짐 금호점 · 금호역 1번 출구 바로 앞\n상담 예약은 프로필 링크에서\n\n#금호역헬스장 #천국의계단 #성동구헬스장 #유산소운동"
+}

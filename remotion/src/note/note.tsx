@@ -116,7 +116,7 @@ export const middle = (s: NoteScene, brand: string, index: number) => {
       return <>
         <Pop at={4} style={{ left: 40, top: 70 }}><Window fig={fig} slug={prop} pills={s.lines.map(plain)} image={prop} corner={<Big size={40} color={N.accent}>?</Big>} /></Pop>
         <Pop at={10} style={{ left: 430, top: 52 }} tilt={-6}><Sticker text={plain(s.reveal)} /></Pop>
-        <Cursor from={[560, 520]} to={[296, 262]} at={16} />
+        <Cursor from={[560, 520]} to={[400, 220]} at={16} />
       </>;
     }
     case "section": return <>
@@ -127,7 +127,7 @@ export const middle = (s: NoteScene, brand: string, index: number) => {
       return <>
         <Pop at={2} style={{ left: 40, top: 50 }}><Window fig={fig} slug={prop} pills={s.lines.map(plain)} image={prop} /></Pop>
         <Pop at={10} style={{ left: 380, top: 24 }} tilt={5}><Sticker text="시티짐 금호점" /></Pop>
-        <Cursor from={[560, 540]} to={[296, 300]} at={14} />
+        <Cursor from={[560, 540]} to={[400, 200]} at={14} />
       </>;
     }
     case "stat": {
@@ -151,7 +151,7 @@ export const middle = (s: NoteScene, brand: string, index: number) => {
     </>;
     case "checklist": return <>
       <Pop at={2} style={{ left: 40, top: 50 }}><Window fig={fig} slug="summary" pills={s.items.map((i) => `✓ ${plain(i)}`)} image="board" /></Pop>
-      <Cursor from={[560, 540]} to={[296, 296]} at={14} />
+      <Cursor from={[560, 540]} to={[400, 200]} at={14} />
     </>;
     case "cta": return <>
       <Pop at={2} style={{ left: 40, top: 40 }}><Window fig={`CITYGYM — ${brand}`} slug="visit" pills={[plain(s.line)]} image="building" /></Pop>

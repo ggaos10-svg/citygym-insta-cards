@@ -2,7 +2,7 @@
   "id": "2026-10-27-stairs-hands",
   "design": "note",
   "scheduled": "2026-10-27T17:30:00+09:00",
-  "status": "failed",
+  "status": "approved",
   "topic": "gym",
   "slides": [
     {
@@ -113,6 +113,5 @@
     "fixed": [
       "7장 이후 댓글 알약이 3줄로 꺾이던 것을 2줄로"
     ]
-  },
-  "error": "container 18194485267405252 status ERROR"
+  }
 }

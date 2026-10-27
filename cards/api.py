@@ -14,6 +14,21 @@ class IGError(RuntimeError):
     pass
 
 
+def warm(urls, tries=4):
+    """Fetch every media URL once so the CDN (jsDelivr, a fresh commit) has it cached before
+    Instagram asks for it; a slow first fetch can make Instagram fail the container."""
+    for url in urls:
+        for attempt in range(tries):
+            try:
+                with urllib.request.urlopen(url, timeout=60) as r:
+                    r.read()
+                break
+            except (urllib.error.URLError, TimeoutError):
+                time.sleep(5 * (attempt + 1))
+        else:
+            raise IGError(f"media not reachable: {url}")
+
+
 class Instagram:
     def __init__(self, token):
         if not token:
@@ -45,11 +60,13 @@ class Instagram:
 
     def _wait_ready(self, container_id, tries=60):
         for _ in range(tries):
-            status = self.get(container_id, fields="status_code").get("status_code")
+            info = self.get(container_id, fields="status_code,status")
+            status = info.get("status_code")
             if status == "FINISHED":
                 return
             if status in ("ERROR", "EXPIRED"):
-                raise IGError(f"container {container_id} status {status}")
+                # "status" carries Instagram's reason (e.g. a media fetch or format error)
+                raise IGError(f"container {container_id} status {status}: {info.get('status', '')}")
             time.sleep(5)
         raise IGError(f"container {container_id} not ready")
 
@@ -59,6 +76,7 @@ class Instagram:
             raise IGError(f"carousel needs 2-20 items, got {len(media_urls)}")
         if len(caption) > MAX_CAPTION:
             raise IGError(f"caption is {len(caption)} chars (max {MAX_CAPTION})")
+        warm(media_urls)
         children = []
         for i, url in enumerate(media_urls):
             if url.endswith(".mp4"):

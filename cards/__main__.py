@@ -227,8 +227,13 @@ def check_note(slides):
             if not s.get(field) and s.get(field) != 0:
                 errs.append(f"slide {i} ({t}): missing {field}")
         head = s.get("headline", "")
-        if len(visible(head)) > 24:
-            errs.append(f"slide {i}: headline is {len(visible(head))} chars (max 24, two lines)")
+        # 100px headline: at most 2 lines, broken by hand with "\n", 9 characters (no spaces) each
+        lines = head.split("\n")
+        if len(lines) > 2:
+            errs.append(f"slide {i}: headline has {len(lines)} lines (max 2, break with \\n)")
+        for line in lines:
+            if len(visible(line)) > 9:
+                errs.append(f"slide {i}: headline line {line!r} is {len(visible(line))} chars (max 9; break it with \\n)")
         if not MARK.search(head):
             errs.append(f"slide {i}: headline needs one {{hl|..}} or {{red|..}} key word")
         for pill in s.get("lines", []) + s.get("items", []):

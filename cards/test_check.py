@@ -17,7 +17,7 @@ bad["slides"][4].update(left="a", right="b", rows=[["", "x", "y"], ["", "x", "y"
 bad["slides"][1]["prop"] = "unicorn"
 bad["slides"][0]["headline"] = "강조 단어가 없는 아주아주 긴 헤드라인 문장이 두 줄을 넘어갑니다"
 errs = "\n".join(check_post(path, bad))
-for needle in ("three compare slides in a row", "'unicorn' has no illustration", "max 24", "key word"):
+for needle in ("three compare slides in a row", "'unicorn' has no illustration", "max 9", "key word"):
     assert needle in errs, (needle, errs)
 print("check_post self-check OK")
 

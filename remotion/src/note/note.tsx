@@ -61,22 +61,20 @@ const Pop: React.FC<{ at: number; children: React.ReactNode; style?: React.CSSPr
 };
 
 // App window: tab "Fig. 0N — label", URL bar, button list on the left, illustration on the right.
-const Window: React.FC<{ fig: string; slug: string; pills: string[]; image?: string; corner?: React.ReactNode; gray?: boolean; w?: number; h?: number; split?: number }> = ({ fig, slug, pills, image, corner, gray, w = 690, h = 560, split = 0.46 }) => {
+const Window: React.FC<{ fig: string; slug: string; pills: string[]; image?: string; corner?: React.ReactNode; gray?: boolean; w?: number; h?: number; split?: number }> = ({ fig, slug, pills, image, corner, gray, w = 690, h = 560, split = 0.5 }) => {
   const stack = split >= 1; // pills on top, illustration full width below
   const f = useCurrentFrame();
   const float = Math.sin(f / 14) * 5;
   return (
     <div style={{ position: "relative", width: w, height: h, background: N.card, border: `3px solid ${N.ink}`, borderRadius: 14, boxShadow: `7px 7px 0 ${N.ink}`, overflow: "hidden", fontFamily: MONO, color: N.ink }}>
       <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 12px", borderBottom: `2px solid ${N.ink}`, background: "#EFE8DC" }}>
-        {["#FF5F57", "#FEBC2E", "#28C840"].map((c) => <span key={c} style={{ width: 11, height: 11, borderRadius: 6, background: c }} />)}
-        <span style={{ marginLeft: 10, border: `2px solid ${N.ink}`, borderBottom: "none", borderRadius: "6px 6px 0 0", padding: "2px 12px", fontSize: 15, fontWeight: 700, background: N.card }}>{fig}</span>
+        {["#FF5F57", "#FEBC2E", "#28C840"].map((c) => <span key={c} style={{ width: 14, height: 14, borderRadius: 7, background: c }} />)}
+        <span style={{ marginLeft: 10, border: `2px solid ${N.ink}`, borderBottom: "none", borderRadius: "6px 6px 0 0", padding: "3px 14px", fontFamily: SANS, fontSize: 24, fontWeight: 900, background: N.card }}>{fig}</span>
       </div>
-      <div style={{ margin: "8px 12px", border: `1.5px solid ${N.line}`, borderRadius: 999, padding: "3px 14px", fontSize: 14, color: N.dim }}>citygym-geumho.kr/#{slug}</div>
-      <div style={{ display: "flex", flexDirection: stack ? "column" : "row", padding: "4px 14px", height: h - 120 }}>
-        <div style={{ width: stack ? "100%" : w * split, display: "flex", flexDirection: "column", gap: 9, paddingTop: 6 }}>
-          <div style={{ fontSize: 13, color: N.dim, letterSpacing: 1 }}>{fig.toUpperCase().slice(0, 7)} · OPTIONS</div>
+      <div style={{ display: "flex", flexDirection: stack ? "column" : "row", padding: "14px 16px", height: h - 50 }}>
+        <div style={{ width: stack ? "100%" : w * split, display: "flex", flexDirection: "column", gap: 12, paddingTop: 4 }}>
           {pills.slice(0, 4).map((p, i) => (
-            <div key={i} style={{ opacity: enter(f, 8 + i * 3), border: `1.8px solid ${N.ink}`, borderRadius: 999, padding: "6px 14px", fontFamily: SANS, fontWeight: 800, fontSize: 30, lineHeight: 1.25, background: i === 1 ? N.accent : "transparent", color: i === 1 ? "#fff" : N.ink, wordBreak: "keep-all" }}>{p}</div>
+            <div key={i} style={{ opacity: enter(f, 8 + i * 3), border: `2px solid ${N.ink}`, borderRadius: 26, padding: "7px 18px", fontFamily: SANS, fontWeight: 900, fontSize: 40, lineHeight: 1.2, whiteSpace: "pre-line", background: i === 1 ? N.accent : "transparent", color: i === 1 ? "#fff" : N.ink, wordBreak: "keep-all" }}>{p}</div>
           ))}
         </div>
         <div style={{ flex: 1, position: "relative" }}>
@@ -84,29 +82,12 @@ const Window: React.FC<{ fig: string; slug: string; pills: string[]; image?: str
           {corner ? <div style={{ position: "absolute", right: 4, top: 0, textAlign: "right" }}>{corner}</div> : null}
         </div>
       </div>
-      <div style={{ position: "absolute", left: 14, right: 14, bottom: 12, display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: N.dim }}>
-        <span>HAND-DRAWN</span>
-        <div style={{ flex: 1, height: 3, background: N.line, position: "relative" }}><div style={{ position: "absolute", left: `${30 + 10 * Math.sin(f / 20)}%`, top: -5, width: 13, height: 13, borderRadius: 7, background: N.ink }} /></div>
-        {["#F0532A", "#FEBC2E", "#3FA37A", "#4A6CF7"].map((c) => <span key={c} style={{ width: 14, height: 14, borderRadius: 7, background: c, border: `1.5px solid ${N.ink}` }} />)}
-      </div>
-    </div>
-  );
-};
-
-// Small dark terminal that types its line.
-const Terminal: React.FC<{ text: string; at: number }> = ({ text, at }) => {
-  const f = useCurrentFrame();
-  const n = Math.floor(Math.max(0, f - at) * 0.9);
-  return (
-    <div style={{ width: 330, background: N.term, borderRadius: 10, border: `2px solid ${N.ink}`, padding: "10px 14px", fontFamily: MONO, fontSize: 15, color: "#E9E4DA", boxShadow: `5px 5px 0 ${N.ink}` }}>
-      <div style={{ color: "#8D8A93", fontSize: 12, marginBottom: 6 }}>●●● citygym — ~/geumho</div>
-      <div><span style={{ color: N.accent }}>&gt;</span> {text.slice(0, n)}<span style={{ opacity: f % 16 < 8 ? 1 : 0 }}>▍</span></div>
     </div>
   );
 };
 
 const Sticker: React.FC<{ text: string }> = ({ text }) => (
-  <div style={{ background: N.ink, color: "#fff", fontFamily: SANS, fontWeight: 900, fontSize: 18, padding: "7px 16px", borderRadius: 999, border: "2px solid #fff", boxShadow: `3px 3px 0 ${N.accent}` }}>{text}</div>
+  <div style={{ background: N.ink, color: "#fff", fontFamily: SANS, fontWeight: 900, fontSize: 28, padding: "8px 20px", borderRadius: 999, border: "2px solid #fff", boxShadow: `3px 3px 0 ${N.accent}` }}>{text}</div>
 );
 
 // Arrow cursor that glides to (x, y) and clicks.
@@ -133,14 +114,13 @@ export const middle = (s: NoteScene, brand: string, index: number) => {
     case "hook": {
       const prop = s.prop ?? "machines";
       return <>
-        <Pop at={0} style={{ left: 0, top: 0 }}><Terminal text={plain(s.lines[0] ?? "")} at={2} /></Pop>
         <Pop at={4} style={{ left: 40, top: 70 }}><Window fig={fig} slug={prop} pills={s.lines.map(plain)} image={prop} corner={<Big size={40} color={N.accent}>?</Big>} /></Pop>
         <Pop at={10} style={{ left: 430, top: 52 }} tilt={-6}><Sticker text={plain(s.reveal)} /></Pop>
         <Cursor from={[560, 520]} to={[296, 262]} at={16} />
       </>;
     }
     case "section": return <>
-      <Pop at={2} style={{ left: 40, top: 40 }}><Window fig={fig} slug={`point-${s.num}`} pills={[plain(s.title)]} image={s.prop ?? order[s.num % order.length]} corner={<Big size={110} color={N.accent}>{String(s.num).padStart(2, "0")}</Big>} /></Pop>
+      <Pop at={2} style={{ left: 40, top: 40 }}><Window fig={fig} slug={`point-${s.num}`} pills={[`${String(s.num).padStart(2, "0")} · ${plain(s.title)}`]} image={s.prop ?? order[s.num % order.length]} split={1} /></Pop>
     </>;
     case "highlight": {
       const prop = s.prop ?? order[index % order.length];
@@ -154,8 +134,7 @@ export const middle = (s: NoteScene, brand: string, index: number) => {
       const prop = s.prop ?? "stairs";
       return <>
         <Pop at={2} style={{ left: 40, top: 60 }}><Window fig={fig} slug={prop} pills={[s.kicker ?? "", plain(s.caption)].filter(Boolean)} image={prop}
-          corner={<div style={{ background: N.term, borderRadius: 10, padding: "6px 16px" }}><div style={{ fontFamily: MONO, fontSize: 12, color: "#9A97A0", letterSpacing: 2 }}>TOTAL</div><Big size={74} color={N.accent}>{s.value}</Big></div>} /></Pop>
-        <Pop at={8} style={{ left: 0, top: 0 }}><Terminal text={`count --${prop}  → ${s.value}`} at={10} /></Pop>
+          corner={<div style={{ background: N.term, borderRadius: 10, padding: "6px 16px" }}><Big size={74} color={N.accent}>{s.value}</Big></div>} /></Pop>
       </>;
     }
     case "compare": return <>
@@ -175,7 +154,7 @@ export const middle = (s: NoteScene, brand: string, index: number) => {
       <Cursor from={[560, 540]} to={[296, 296]} at={14} />
     </>;
     case "cta": return <>
-      <Pop at={2} style={{ left: 40, top: 40 }}><Window fig={`CITYGYM — ${brand}`} slug="visit" pills={[plain(s.line), s.location]} image="building" /></Pop>
+      <Pop at={2} style={{ left: 40, top: 40 }}><Window fig={`CITYGYM — ${brand}`} slug="visit" pills={[plain(s.line)]} image="building" /></Pop>
       <Pop at={10} style={{ left: 300, top: 380 }}><Pic name="subway" style={{ width: 220, height: 230 }} /></Pop>
       <Pop at={14} style={{ left: 330, top: 26 }} tilt={-5}><Sticker text={`📍 ${s.location}`} /></Pop>
     </>;

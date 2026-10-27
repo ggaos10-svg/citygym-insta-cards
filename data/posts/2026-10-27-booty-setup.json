@@ -7,7 +7,7 @@
   "slides": [
     {
       "type": "hook",
-      "headline": "힙 쓰러스트 하는데 {red|허벅지}만 터진다면?",
+      "headline": "힙 쓰러스트 하는데\n{red|허벅지}만 터진다면?",
       "lines": [
         "힙 쓰러스트",
         "허벅지만 뻐근"
@@ -18,7 +18,7 @@
     },
     {
       "type": "highlight",
-      "headline": "무게를 줄여도 {red|똑같다면},",
+      "headline": "무게를 줄여도\n{red|똑같다면},",
       "lines": [
         "무게 탓 아님",
         "자세 3곳 체크"
@@ -28,7 +28,7 @@
     },
     {
       "type": "section",
-      "headline": "① 정강이가 {hl|세로}가 되게 발 놓기.",
+      "headline": "① 발은 무릎 밑\n{hl|정강이 세로}로",
       "num": 1,
       "title": "발 위치",
       "prop": "hip_thrust",
@@ -36,14 +36,14 @@
     },
     {
       "type": "punch",
-      "headline": "② 고개 젖히면 {red|허리}가 대신 들어요.",
+      "headline": "② 고개 젖히면\n{red|허리}가 들어요",
       "word": "턱 당겨",
       "sub": "시선은 무릎 쪽으로",
       "next": "3번은 꼭대기"
     },
     {
       "type": "stat",
-      "headline": "③ 맨 위에서 {hl|1초} 쥐어짜기.",
+      "headline": "③ 맨 위에서\n{hl|1초} 쥐어짜기",
       "value": "1초",
       "caption": "맨 위에서 멈춤",
       "prop": "stopwatch",
@@ -51,7 +51,7 @@
     },
     {
       "type": "checklist",
-      "headline": "힙 데이 전에 {red|캡처}해두세요.",
+      "headline": "힙 데이 전에\n{red|캡처}해두세요",
       "title": "힙 쓰러스트 체크",
       "items": [
         "정강이 세로",
@@ -63,8 +63,8 @@
     },
     {
       "type": "cta",
-      "headline": "허벅지만 터지는 친구한테 {red|보내주세요}.",
-      "line": "몇 번이 문제였는지 댓글로 1·2·3",
+      "headline": "허벅지만 터지는\n친구한테 {red|보내요}",
+      "line": "몇 번이었나요?\n댓글로 1·2·3",
       "location": "금호역 1번 출구 앞"
     }
   ],

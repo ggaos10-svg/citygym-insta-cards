@@ -11,20 +11,23 @@ import { SANS, enter, slam } from "./note/pulse";
 export type CardSlide = NoteScene & { headline: string; next?: string };
 export type CardProps = { slide: CardSlide; idx: number; total: number };
 
+// Headline: 100px, one line per "\n" in the copy (the checker keeps each line short enough to fit),
+// written a word at a time.
 const Headline: React.FC<{ text: string }> = ({ text }) => {
   const f = useCurrentFrame();
   let i = 0;
   return (
-    <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: 78, lineHeight: 1.22, letterSpacing: -2, wordBreak: "keep-all" }}>
+    <div style={{ fontFamily: SANS, fontWeight: 900, fontSize: 100, lineHeight: 1.18, letterSpacing: -2.5, wordBreak: "keep-all" }}>
       {parse(text).flatMap((part, pi) =>
-        part.text.split(/(\s+)/).filter(Boolean).map((w, wi) => {
+        part.text.split(/(\n|\s+)/).filter(Boolean).map((w, wi) => {
+          if (w === "\n") return <br key={`${pi}-${wi}`} />;
           if (!w.trim()) return <span key={`${pi}-${wi}`}> </span>;
           const on = enter(f, 6 + i++ * 3, 5); // a word every 0.1 s, like the narration-timed reel
           const key = part.hl || part.red;
           return (
             <span key={`${pi}-${wi}`} style={{
               display: "inline-block", opacity: on, transform: `translateY(${(1 - on) * 14}px)`,
-              color: key ? N.accent : N.ink, textDecoration: key ? "underline" : "none", textUnderlineOffset: 10, textDecorationThickness: 6,
+              color: key ? N.accent : N.ink, textDecoration: key ? "underline" : "none", textUnderlineOffset: 14, textDecorationThickness: 8,
             }}>{w}</span>
           );
         }),
@@ -50,11 +53,11 @@ export const CardNote: React.FC<CardProps> = ({ slide, idx, total }) => {
       </div>
       <div style={{ position: "absolute", left: 64, right: 64, top: 104 }}><Headline text={slide.headline} /></div>
       {/* the reel's 720x620 middle stage, scaled up to fill the 4:5 frame */}
-      <div style={{ position: "absolute", left: 44, top: 400, width: 720, height: 620, transform: "scale(1.24)", transformOrigin: "0 0" }}>
+      <div style={{ position: "absolute", left: 44, top: 380, width: 720, height: 620, transform: "scale(1.32)", transformOrigin: "0 0" }}>
         {middle(slide, "금호점", idx - 1)}
       </div>
       {plus(40, 380)}{plus(990, 380)}{plus(40, 1230)}
-      {!showsMascot && <div style={{ position: "absolute", right: -40, bottom: 0, width: 300, height: 360, transform: `translateY(${bob + (1 - pop) * 90}px) scale(${0.9 + 0.1 * pop})` }}><Mascot pose={POSE[slide.type]} /></div>}
+      {!showsMascot && <div style={{ position: "absolute", right: -30, bottom: 0, width: 240, height: 288, transform: `translateY(${bob + (1 - pop) * 90}px) scale(${0.9 + 0.1 * pop})` }}><Mascot pose={POSE[slide.type]} /></div>}
       {slide.next && idx < total && (
         <div style={{ position: "absolute", left: 64, bottom: 56, fontFamily: SANS, fontSize: 36, fontWeight: 900, color: "#fff", background: N.ink, border: "3px solid #fff", borderRadius: 999, padding: "12px 28px", boxShadow: `5px 5px 0 ${N.accent}`, opacity: nextOn, transform: `translateX(${(1 - nextOn) * -20 + Math.sin(f / 6) * 5}px)` }}>
           {slide.next} →

@@ -436,6 +436,41 @@ export const Booty: React.FC = () => {
   );
 };
 
+// leg press (side view): 45 degree rails, a sliding foot plate with weight plates, seat and back pad
+export const LegPress: React.FC = () => {
+  const t = useCurrentFrame() / 30;
+  const k = 0.5 - 0.5 * Math.cos(t * TAU * 0.4); // 0 = knees bent, 1 = pushed out
+  const ang = -42, rad = (ang * Math.PI) / 180;
+  const ux = Math.cos(rad), uy = Math.sin(rad); // along the rails, up to the right
+  const o = [120, 338]; // rail start
+  const at = (d: number, n = 0) => [o[0] + ux * d - uy * n, o[1] + uy * d + ux * n];
+  const d = 150 + 110 * k; // sled position along the rails
+  const sled = at(d), pl = (a: number[]) => a.join(" ");
+  const plate = (n: number) => { const c = at(d - 10, n); return <g key={n}><circle cx={c[0]} cy={c[1]} r={34} fill="#2E2B28" stroke={INK} strokeWidth={6} /><circle cx={c[0]} cy={c[1]} r={10} fill="#77726B" stroke={INK} strokeWidth={4} /></g>; };
+  return (
+    <Paper viewBox="0 0 400 420">
+      <path d="M40 392 H372 L360 404 H28Z" fill={SHADOW} />
+      <path d="M52 386 H360" stroke={INK} strokeWidth={10} strokeLinecap="round" />
+      {/* frame legs */}
+      <path d={`M${pl(at(40))} L${pl(at(330))}`} stroke={INK} strokeWidth={30} strokeLinecap="round" />
+      <path d={`M${pl(at(40))} L${pl(at(330))}`} stroke="#5A5650" strokeWidth={18} strokeLinecap="round" />
+      <path d={`M${at(120)[0]} ${at(120)[1]} V386 M${at(300)[0]} ${at(300)[1]} V386`} stroke={INK} strokeWidth={14} strokeLinecap="round" />
+      {/* plates behind and the sled */}
+      {plate(70)}
+      <path d={`M${pl(at(d - 14, -18))} L${pl(at(d + 14, -18))} L${pl(at(d + 14, 8))} L${pl(at(d - 14, 8))}Z`} fill={ORG[1]} stroke={INK} strokeWidth={6} strokeLinejoin="round" />
+      {/* foot plate: perpendicular to the rails */}
+      <path d={`M${pl(at(d + 10, -62))} L${pl(at(d + 10, 62))}`} stroke={INK} strokeWidth={34} strokeLinecap="round" />
+      <path d={`M${pl(at(d + 10, -62))} L${pl(at(d + 10, 62))}`} stroke="#ECE6DC" strokeWidth={22} strokeLinecap="round" />
+      {/* foot-position marks on the plate: upper, middle, lower */}
+      {[-40, 0, 40].map((n, i) => { const c = at(d + 10, n); return <circle key={i} cx={c[0]} cy={c[1]} r={6} fill={i === 0 ? ORANGE : INK} />; })}
+      {/* seat and back pad */}
+      <path d="M62 330 H178 L190 358 H50Z" fill="#46423D" stroke={INK} strokeWidth={7} strokeLinejoin="round" />
+      <path d="M52 330 L84 224 L120 238 L98 330Z" fill="#E06B3C" stroke={INK} strokeWidth={7} strokeLinejoin="round" />
+      <path d="M118 358 V386" stroke={INK} strokeWidth={14} strokeLinecap="round" />
+    </Paper>
+  );
+};
+
 // flat bench in front of a squat rack with a loaded barbell
 export const Bench: React.FC = () => {
   const W = 230, D = 150, H = 230, p = fit(W, D, H);
@@ -632,6 +667,7 @@ export const CODE_PROPS: Record<string, React.FC> = {
   treadmill: Treadmill,
   booty: Booty,
   bench: Bench,
+  leg_press: LegPress,
   sauna: Sauna,
   desk: Desk,
   rack: Rack,

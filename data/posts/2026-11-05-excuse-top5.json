@@ -1,0 +1,21 @@
+{
+  "id": "2026-11-05-excuse-top5",
+  "design": "note",
+  "scheduled": "2026-11-05T19:00:00+09:00",
+  "status": "pending",
+  "note": "자체평가 중",
+  "topic": "fun",
+  "slides": [
+    {"type": "hook", "headline": "퇴근하고 헬스장\n안 간 {red|핑계} TOP5", "lines": ["퇴근 후 7시", "오늘은 쉴까", "나만 그래?"], "reveal": "5위부터 공개", "prop": "phone", "next": "5위부터 가요"},
+    {"type": "highlight", "headline": "1위는 다들\n{hl|한 번쯤} 했어요", "lines": ["5위부터", "1위 찔려요"], "prop": "phone", "next": "5위는 지하철에서"},
+    {"type": "section", "headline": "5위 지하철에서\n{red|이미 방전}", "num": 5, "title": "5위", "prop": "subway", "next": "4위는 소파"},
+    {"type": "punch", "headline": "4위 집 가서\n{red|잠깐만} 쉬고 갈게", "word": "잠깐만", "sub": "소파에 앉는 순간 끝", "next": "3위는 기구 앞"},
+    {"type": "section", "headline": "3위 기구 앞에서\n{red|뭐 하지} 멍때림", "num": 3, "title": "3위", "prop": "machines", "next": "2위는 달력"},
+    {"type": "highlight", "headline": "2위 {red|내일부터}\n진짜 시작할게", "lines": ["내일부터 한다", "내일은 또 내일"], "prop": "stopwatch", "next": "1위는 다음 장"},
+    {"type": "punch", "headline": "1위 오늘은\n{red|좀 피곤해서}", "word": "피곤해서", "sub": "안 해본 사람 손", "next": "핑계 깨는 법"},
+    {"type": "checklist", "headline": "핑계 깨는 법\n{red|캡처}해두세요", "title": "10분 컷 규칙", "items": ["가방은 전날 챙기기", "10분만 하고 오기", "오늘 기구 3개만 정하기", "내일 말고 오늘"], "next": "몇 위였어요"},
+    {"type": "cta", "headline": "맨날 핑계 대는\n친구한테 {red|보내요}", "line": "나는 몇 위?\n5~1 숫자로 댓글", "location": "금호역 1번 출구 앞"}
+  ],
+  "caption": "내가 제일 많이 댄 핑계는 몇 위일까요?\n\n퇴근하면 몸은 벌써 소파로 가 있죠. 핑계 5개를 순위로 모았어요. 정리해 둔 10분 컷 규칙은 저장해두고, 가기 싫은 날 한 번만 꺼내 보세요. 일단 가방 챙기는 것부터요.\n\n시티짐 금호점 · 금호역 1번 출구 바로 앞\n상담 예약은 프로필 링크에서\n\n#금호역헬스장 #성동구헬스장 #운동핑계 #퇴근후운동",
+  "alt": "퇴근하고 헬스장에 안 간 핑계를 5위부터 1위까지 보여주고, 핑계를 깨는 10분 컷 규칙을 정리한 카드뉴스."
+}

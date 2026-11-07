@@ -3,8 +3,6 @@ name: publish
 # Renders new card posts with Remotion (remotion/, Note design) and publishes approved ones
 # whose time has passed. Runs hourly at :23 (UTC), and on pushes to drafts or the renderer.
 on:
-  schedule:
-    - cron: "23 * * * *"
   push:
     branches: [main]
     paths: ["data/posts/**", "remotion/**", "cards/**"]

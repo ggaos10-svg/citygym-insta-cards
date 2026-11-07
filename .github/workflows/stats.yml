@@ -1,0 +1,35 @@
+name: stats
+
+# Saves likes/views/reach of recent posts to data/stats.json. Started from the dashboard only.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: cards-bot
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch stats
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        run: python -m cards.stats
+      - name: Commit
+        run: |
+          git config user.name "cards-bot"
+          git config user.email "cards-bot@users.noreply.github.com"
+          git add data/stats.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "bot: stats $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase
+          git push
